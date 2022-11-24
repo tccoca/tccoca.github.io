@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="特别声明：下面文中的很多要点、代码示例均摘录自阮一峰文章中的内容。虽然加入了一些笔者自己的思考和总结，但笔者认为该文章应该属于转发。 分享文章作者：阮一峰 分享文章：Javascript继承机制的设计思想 分享文章：Javascript 面向对象编程（一）：封装 分享文章：Javascript面向对象编程（二）：构造函数的继承 分享文章：Javascript面向对象编程（三）：非构造函数的继承">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】彻底理解js中关于prototype的继承机制">
+<meta property="og:url" content="https://tccoca.github.io/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="特别声明：下面文中的很多要点、代码示例均摘录自阮一峰文章中的内容。虽然加入了一些笔者自己的思考和总结，但笔者认为该文章应该属于转发。 分享文章作者：阮一峰 分享文章：Javascript继承机制的设计思想 分享文章：Javascript 面向对象编程（一）：封装 分享文章：Javascript面向对象编程（二）：构造函数的继承 分享文章：Javascript面向对象编程（三）：非构造函数的继承">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-12-25T07:31:31.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="js">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/","path":"2018/12/25/【转】彻底理解js中关于prototype的继承机制/","title":"【转】彻底理解js中关于prototype的继承机制"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>【转】彻底理解js中关于prototype的继承机制 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#js%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">js中的封装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8B%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.</span> <span class="nav-text">原始方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8B%E6%96%B9%E5%BC%8F%E7%9A%84%E6%94%B9%E8%BF%9B"><span class="nav-number">2.2.</span> <span class="nav-text">原始方式的改进</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#js%E4%B8%AD%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">js中的构造函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#prototype%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.4.</span> <span class="nav-text">prototype模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#js%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.</span> <span class="nav-text">js的继承机制设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#js%E7%9A%84%E6%9D%A5%E6%BA%90"><span class="nav-number">3.1.</span> <span class="nav-text">js的来源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#prototype%E7%9A%84%E4%BA%A7%E7%94%9F"><span class="nav-number">3.2.</span> <span class="nav-text">prototype的产生</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E7%BB%A7%E6%89%BF"><span class="nav-number">4.</span> <span class="nav-text">构造函数的继承</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F1%EF%BC%9A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%BB%91%E5%AE%9A"><span class="nav-number">4.1.</span> <span class="nav-text">方式1：构造函数绑定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F2%EF%BC%9Aprototype-%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">4.2.</span> <span class="nav-text">方式2：prototype+构造函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F3%EF%BC%9A%E7%9B%B4%E6%8E%A5%E7%BB%A7%E6%89%BFprototype"><span class="nav-number">4.3.</span> <span class="nav-text">方式3：直接继承prototype</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F4%EF%BC%9A%E5%88%A9%E7%94%A8%E7%A9%BA%E5%AF%B9%E8%B1%A1%E4%BD%9C%E4%B8%BA%E4%B8%AD%E4%BB%8B"><span class="nav-number">4.4.</span> <span class="nav-text">方式4：利用空对象作为中介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F5%EF%BC%9A%E6%8B%B7%E8%B4%9D%E7%BB%A7%E6%89%BF"><span class="nav-number">4.5.</span> <span class="nav-text">方式5：拷贝继承</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E7%BB%A7%E6%89%BF"><span class="nav-number">5.</span> <span class="nav-text">非构造函数的继承</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F1%EF%BC%9Aobject-%E6%96%B9%E6%B3%95"><span class="nav-number">5.1.</span> <span class="nav-text">方式1：object()方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F2%EF%BC%9A%E6%B5%85%E6%8B%B7%E8%B4%9D"><span class="nav-number">5.2.</span> <span class="nav-text">方式2：浅拷贝</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F3%EF%BC%9A%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">5.3.</span> <span class="nav-text">方式3：深拷贝</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="【转】彻底理解js中关于prototype的继承机制 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】彻底理解js中关于prototype的继承机制
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-12-25 15:31:31" itemprop="dateCreated datePublished" datetime="2018-12-25T15:31:31+08:00">2018-12-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BD%AC%E5%8F%91%E5%A5%BD%E6%96%87/" itemprop="url" rel="index"><span itemprop="name">转发好文</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>特别声明：下面文中的很多要点、代码示例均摘录自阮一峰文章中的内容。虽然加入了一些笔者自己的思考和总结，但笔者认为该文章应该属于转发。</p>
+<p>分享文章作者：阮一峰</p>
+<p>分享文章：<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2011/06/designing_ideas_of_inheritance_mechanism_in_javascript.html">Javascript继承机制的设计思想</a></p>
+<p>分享文章：<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_encapsulation.html">Javascript 面向对象编程（一）：封装</a></p>
+<p>分享文章：<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_inheritance.html">Javascript面向对象编程（二）：构造函数的继承</a></p>
+<p>分享文章：<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_inheritance_continued.html">Javascript面向对象编程（三）：非构造函数的继承</a></p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>笔者是学java出身，所以关于继承，脑海中反射最多的是类、实例对象等概念。笔者在学习和研究js这门语言时，最初曾尝试套用java的理论来对照学习。</p>
+<p>java是一门面向对象编程的语言，它与C++、C#等很相似。js中虽然也有对象的概念，但是js中没有类的概念，如果强行将java的继承机制套用到js中来理解js的构造函数、prototype，那无疑是一个痛苦的过程。</p>
+<p>所以笔者得出的结论是，最好不要混为一谈，最好不要对照学习。学习js，就要完全按照它的“游戏规则”来做，试着去接受它的机制和理论。</p>
+<p>后来笔者阅读了《你不知道的JavaScript（上卷）》，这本书写的很好，很多js语法原理的内容都讲述的很细。其中有章节就讲述了原型（prototype），原型在继承中的作用，甚至包括面向委托的设计、与类设计的对比等等。读完后笔者仿佛有些感悟，仿佛领略到js中原型设计胜过java中类设计的要点。但是，可能书中的文字描述太过于理论吧，过了一段时间，笔者几乎全忘记了。。。</p>
+<p>直到笔者阅读过阮一峰大神的4篇文章，笔者认为自己对js的继承机制与应用才有了深入的认知。阮大神的文章一向通俗易懂，举例清晰明了，颇有良师风范呀！</p>
+<p>下面笔者会记录学习到的知识点，并加入自己的思考、理解。</p>
+<span id="more"></span>
+
+<h2 id="js中的封装"><a href="#js中的封装" class="headerlink" title="js中的封装"></a>js中的封装</h2><p>所谓封装，笔者认为，就是将一些松散结构的数据，变为一个有组织结构的数据。java中是以类作为封装手段，而js则是以对象作为封装手段。</p>
+<h3 id="原始方式"><a href="#原始方式" class="headerlink" title="原始方式"></a>原始方式</h3><p>下面是一个原型对象，它说明了关于Cat的信息结构。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">　<span class="keyword">var</span> <span class="title class_">Cat</span> = &#123;</span><br><span class="line">　　　　name : <span class="string">&#x27;&#x27;</span>,</span><br><span class="line"></span><br><span class="line">　　　　color : <span class="string">&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line">　　&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>那么基于Cat的规格（Schema），可以产生很多实例对象，如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cat1 = &#123;&#125;; <span class="comment">// 创建一个空对象</span></span><br><span class="line"></span><br><span class="line">　　　　cat1.<span class="property">name</span> = <span class="string">&quot;大毛&quot;</span>; <span class="comment">// 按照原型对象的属性赋值</span></span><br><span class="line"></span><br><span class="line">　　　　cat1.<span class="property">color</span> = <span class="string">&quot;黄色&quot;</span>;</span><br><span class="line"></span><br><span class="line">　　<span class="keyword">var</span> cat2 = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">　　　　cat2.<span class="property">name</span> = <span class="string">&quot;二毛&quot;</span>;</span><br><span class="line"></span><br><span class="line">　　　　cat2.<span class="property">color</span> = <span class="string">&quot;黑色&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>但是这种方式有两个缺点：一是如果多生成几个实例，写起来就非常麻烦；二是实例与原型之间，没有任何办法，可以看出有什么联系。</p>
+</blockquote>
+<p><strong>知识点</strong>：这里提到原型对象和实例对象，是为了说明继承关系。这里提到的原型对象跟prototype还没有任何关系！</p>
+<h3 id="原始方式的改进"><a href="#原始方式的改进" class="headerlink" title="原始方式的改进"></a>原始方式的改进</h3><p>原型对象改进后如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">　<span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>) &#123;</span><br><span class="line"></span><br><span class="line">　　　　<span class="keyword">return</span> &#123;</span><br><span class="line"></span><br><span class="line">　　　　　　<span class="attr">name</span>:name,</span><br><span class="line"></span><br><span class="line">　　　　　　<span class="attr">color</span>:color</span><br><span class="line"></span><br><span class="line">　　　　&#125;</span><br><span class="line"></span><br><span class="line">　　&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实例对象生成如下，其实就是在调用函数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var cat1 = Cat(&quot;大毛&quot;,&quot;黄色&quot;);</span><br><span class="line"></span><br><span class="line">var cat2 = Cat(&quot;二毛&quot;,&quot;黑色&quot;);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>问题依然存在，cat1和cat2之间没有内在的联系，不能反映出它们是同一个原型对象的实例。</p>
+</blockquote>
+<h3 id="js中的构造函数"><a href="#js中的构造函数" class="headerlink" title="js中的构造函数"></a>js中的构造函数</h3><p>为了解决从原型对象生成实例的问题，构造函数（Constructor）模式应运而生。</p>
+<blockquote>
+<p>所谓”构造函数”，其实就是一个普通函数，但是内部使用了this变量。对构造函数使用new运算符，就能生成实例，并且this变量会绑定在实例对象上。</p>
+</blockquote>
+<p>原型对象转换为了构造函数后，如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line"></span><br><span class="line">　　<span class="variable language_">this</span>.<span class="property">name</span>=name;</span><br><span class="line"></span><br><span class="line">　　<span class="variable language_">this</span>.<span class="property">color</span>=color;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>知识点</strong>：构造函数本质上还是函数，js中函数也是对象。函数名应该以大写字母开头。</p>
+<p>基于构造函数生成实例对象如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="keyword">var</span> cat2 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;二毛&quot;</span>,<span class="string">&quot;黑色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">name</span>); <span class="comment">// 大毛</span></span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">color</span>); <span class="comment">// 黄色</span></span><br></pre></td></tr></table></figure>
+
+<p>js对每个实例对象自动包含一个constructor属性，该属性指向实例对象的构造函数。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">constructor</span> == <span class="title class_">Cat</span>); <span class="comment">//true</span></span><br><span class="line"><span class="title function_">alert</span>(cat2.<span class="property">constructor</span> == <span class="title class_">Cat</span>); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+<p>js还提供了一个instanceof运算符，验证原型对象与实例对象之间的关系。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(cat1 <span class="keyword">instanceof</span> <span class="title class_">Cat</span>); <span class="comment">//true</span></span><br><span class="line"><span class="title function_">alert</span>(cat2 <span class="keyword">instanceof</span> <span class="title class_">Cat</span>); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+<p>一切看起来很美好，但是单纯的构造函数，依然存在问题。</p>
+<p>现在为原型对象Cat添加一个不变的属性type，一个方法eat，如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">type</span> = <span class="string">&quot;猫科动物&quot;</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">eat</span> = <span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="title function_">alert</span>(<span class="string">&quot;吃老鼠&quot;</span>);&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成实例对象后，表面上看着一切正常。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="keyword">var</span> cat2 = <span class="keyword">new</span> <span class="title class_">Cat</span> (<span class="string">&quot;二毛&quot;</span>,<span class="string">&quot;黑色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">type</span>); <span class="comment">// 猫科动物</span></span><br><span class="line">cat1.<span class="title function_">eat</span>(); <span class="comment">// 吃老鼠</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>但实际上这样做存在一个很大的弊端，那就是对于每一个实例对象，type属性和eat()方法都是一模一样的内容，每一次生成一个实例，都必须为重复的内容，多占用一些内存。这样既不环保，也缺乏效率。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">eat</span> == cat2.<span class="property">eat</span>); <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p>能不能让type属性和eat()方法在内存中只生成一次，然后所有实例都指向那个内存地址呢？回答是可以的，prototype就是来解决这个问题。</p>
+<h3 id="prototype模式"><a href="#prototype模式" class="headerlink" title="prototype模式"></a>prototype模式</h3><blockquote>
+<p>js规定，每个构造函数都有一个prototype属性，该属性指向一个对象，该对象的所有属性和方法，都会被构造函数的实例对象继承。</p>
+</blockquote>
+<p><strong>思考点</strong>：prototype属性指向的对象，就是经常提到的prototype对象。那么这个prototype属性是否只是针对构造函数才有呢？实例对象是否有自带的prototype属性呢？</p>
+<p><strong>知识点</strong>：自带的prototype属性只是针对构造函数，实例对象是不自带prototype属性的。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">type</span> = <span class="string">&quot;猫科动物&quot;</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">eat</span> = <span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="title function_">alert</span>(<span class="string">&quot;吃老鼠&quot;</span>);&#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Cate</span>.<span class="property"><span class="keyword">prototype</span></span>); <span class="comment">// Object</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&#x27;大毛&#x27;</span>, <span class="string">&#x27;黄色&#x27;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property"><span class="keyword">prototype</span></span>); <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>有了prototype，我们可以将那些不变的属性和方法，定义在prototype对象上。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line"></span><br><span class="line">　　　　<span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line"></span><br><span class="line">　　　　<span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">type</span> = <span class="string">&quot;猫科动物&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">eat</span> = <span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="title function_">alert</span>(<span class="string">&quot;吃老鼠&quot;</span>)&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>看下生成实例对象，继承了prototype中的属性和方法。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="keyword">var</span> cat2 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;二毛&quot;</span>,<span class="string">&quot;黑色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">type</span>); <span class="comment">// 猫科动物</span></span><br><span class="line">cat1.<span class="title function_">eat</span>(); <span class="comment">// 吃老鼠</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这时所有实例的type属性和eat()方法，其实都是同一个内存地址，指向prototype对象，因此就提高了运行效率。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">eat</span> == cat2.<span class="property">eat</span>); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>思考点</strong>：笔者在这里很好奇，将不变的属性和方法定义在prototype对象上，实例对象对这些属性和方法做改变会影响其他实例和prototype对象吗？</p>
+<p><strong>知识点</strong>：不会，实例对象改变从prototype继承来的属性或方法，并不会导致prototype对象和其他实例对象中对应的属性和方法跟着变化。同时笔者认为这里用“不变”这个词不合适，容易产生误解。prototype对象上的属性或方法是可以变的，变的目的是影响到所有继承该prototype对象的实例对象，所以笔者认为这里应该将“不变的属性和方法”改为“需要共享给所有实例对象的属性和方法”比较合适。下面介绍js的继承机制时也会提到这点。如果是prototype改变了属性或方法，继承该prototype的实例对象中对应的属性或方法会跟着变化，但是如果实例对象已经在prototype变化前将对应的属性或方法做了修改，那么其不受prototype的变化影响，笔者觉着应该是对实例对象继承而来的属性或方法做修改时，产生了深拷贝。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line"></span><br><span class="line">　　　　<span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line"></span><br><span class="line">　　　　<span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">type</span> = <span class="string">&quot;猫科动物&quot;</span>;</span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">eat</span> = <span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="title function_">alert</span>(<span class="string">&quot;吃老鼠&quot;</span>)&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="keyword">var</span> cat2 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;二毛&quot;</span>,<span class="string">&quot;黑色&quot;</span>);</span><br><span class="line">cat1.<span class="property">type</span> = <span class="string">&#x27;两栖动物&#x27;</span>;</span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">type</span>); <span class="comment">// 猫科动物</span></span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">type</span>); <span class="comment">// 两栖动物</span></span><br><span class="line"><span class="title function_">alert</span>(cat2.<span class="property">type</span>); <span class="comment">// 猫科动物</span></span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">type</span> = <span class="string">&quot;狗科动物&quot;</span>;</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">type</span>); <span class="comment">// 两栖动物</span></span><br><span class="line"><span class="title function_">alert</span>(cat2.<span class="property">type</span>); <span class="comment">// 狗科动物</span></span><br></pre></td></tr></table></figure>
+
+<p>js内部提供了关于prototype的一些验证方法。</p>
+<p><strong>isPrototypeOf()</strong></p>
+<p>用来判断某个proptotype对象和某个实例之间的关系。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(<span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="title function_">isPrototypeOf</span>(cat1)); <span class="comment">//true</span></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="title function_">isPrototypeOf</span>(cat2)); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>hasOwnProperty()</strong></p>
+<p>每个实例对象都有一个hasOwnProperty()方法，用来判断某一个属性到底是本地属性，还是继承自prototype对象的属性。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(cat1.<span class="title function_">hasOwnProperty</span>(<span class="string">&quot;name&quot;</span>)); <span class="comment">// true</span></span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="title function_">hasOwnProperty</span>(<span class="string">&quot;type&quot;</span>)); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>in运算符</strong></p>
+<p>in运算符可以用来判断，某个实例是否含有某个属性，不管是不是本地属性。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">alert</span>(<span class="string">&quot;name&quot;</span> <span class="keyword">in</span> cat1); <span class="comment">// true</span></span><br><span class="line"><span class="title function_">alert</span>(<span class="string">&quot;type&quot;</span> <span class="keyword">in</span> cat1); <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>in运算符还可以用来遍历某个对象的所有属性。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="keyword">var</span> prop <span class="keyword">in</span> cat1) &#123; <span class="title function_">alert</span>(<span class="string">&quot;cat1[&quot;</span>+prop+<span class="string">&quot;]=&quot;</span>+cat1[prop]); &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="js的继承机制设计"><a href="#js的继承机制设计" class="headerlink" title="js的继承机制设计"></a>js的继承机制设计</h2><p>当笔者了解了js设计的来龙去脉后，关于对js中prototype的理解，可以说更清晰了，也更轻松了。你会发现，一直以来觉着很难懂的js继承机制，原来竟是js设计者为了让js更容易学习与接收才这样设计的。</p>
+<h3 id="js的来源"><a href="#js的来源" class="headerlink" title="js的来源"></a>js的来源</h3><blockquote>
+<p>1994年，网景公司急需一种网页脚本语言，使得浏览器可以与网页互动。工程师Brendan Eich负责开发这种新语言。他觉得，没必要设计得很复杂，这种语言只要能够完成一些简单操作就够了，比如判断用户有没有填写表单。</p>
+</blockquote>
+<blockquote>
+<p>1994年正是面向对象编程（object-oriented programming）最兴盛的时期，C++是当时最流行的语言，而Java语言的1.0版即将于第二年推出，Sun公司正在大肆造势。</p>
+</blockquote>
+<blockquote>
+<p>Brendan Eich无疑受到了影响，Javascript里面所有的数据类型都是对象（object），到底要不要设计”继承”机制呢？</p>
+</blockquote>
+<blockquote>
+<p>真的是一种简易的脚本语言，其实不需要有”继承”机制。但是，Javascript里面都是对象，必须有一种机制，将所有对象联系起来。所以，Brendan Eich最后还是设计了”继承”。</p>
+</blockquote>
+<h3 id="prototype的产生"><a href="#prototype的产生" class="headerlink" title="prototype的产生"></a>prototype的产生</h3><p>js的设计者选择了继承，但不想引入类这个概念，原因很简单，他觉着引入类概念太正式了，他希望js更降低初学者的入门难度。于是他虽然借鉴了当时java和c++中的new来生成实例对象，但new后面跟的并不是类，而是构造函数。</p>
+<p>但是new + 构造函数的方式并不完美，存在一个问题。也就是上面提到的关于单纯的构造函数方式生成实例对象时存在的问题，无法共享属性和方法，每个实例对象各有有一套自己的属性和方法副本，这是对内存资源的浪费。同时一个实例对象修改了某个具有共享意义的属性后，其他实例是不受影响的。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">DOG</span>(<span class="params">name</span>)&#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">species</span> = <span class="string">&#x27;犬科&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> dogA = <span class="keyword">new</span> <span class="title function_">DOG</span>(<span class="string">&#x27;大毛&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> dogB = <span class="keyword">new</span> <span class="title function_">DOG</span>(<span class="string">&#x27;二毛&#x27;</span>);</span><br><span class="line">dogA.<span class="property">species</span> = <span class="string">&#x27;猫科&#x27;</span>;</span><br><span class="line"><span class="title function_">alert</span>(dogB.<span class="property">species</span>); <span class="comment">// 显示&quot;犬科&quot;，不受dogA的影响</span></span><br></pre></td></tr></table></figure>
+
+<p>因此，为了解决上述的问题，js的设计者为构造函数设置了一个prototype属性。</p>
+<blockquote>
+<p>这个属性包含一个对象，所有实例对象需要共享的属性和方法，都放在这个对象里面；那些不需要共享的属性和方法，就放在构造函数里面。</p>
+</blockquote>
+<p>实例对象一旦创建，将自动引用prototype对象的属性和方法。也就是说，实例对象的属性和方法，分成两种，一种是本地的，另一种是引用prototype的。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">DOG</span>(<span class="params">name</span>)&#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable constant_">DOG</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">species</span> = <span class="string">&#x27;犬科&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> dogA = <span class="keyword">new</span> <span class="title function_">DOG</span>(<span class="string">&#x27;大毛&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> dogB = <span class="keyword">new</span> <span class="title function_">DOG</span>(<span class="string">&#x27;二毛&#x27;</span>);</span><br><span class="line"><span class="title function_">alert</span>(dogA.<span class="property">species</span>); <span class="comment">// 犬科</span></span><br><span class="line"><span class="title function_">alert</span>(dogB.<span class="property">species</span>); <span class="comment">// 犬科</span></span><br><span class="line"></span><br><span class="line"><span class="variable constant_">DOG</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">species</span> = <span class="string">&#x27;猫科&#x27;</span>;</span><br><span class="line"><span class="title function_">alert</span>(dogA.<span class="property">species</span>); <span class="comment">// 猫科</span></span><br><span class="line"><span class="title function_">alert</span>(dogB.<span class="property">species</span>); <span class="comment">// 猫科</span></span><br></pre></td></tr></table></figure>
+
+<p>现在，species属性放在prototype对象里，是两个实例对象共享的。只要修改了prototype对象，就会同时影响到两个实例对象。</p>
+<p><strong>知识点</strong>：了解js继承机制的来龙去脉后，笔者有了全新的认知。以前看很多文字描述中，提到的原型对象其实更多指的是prototype对象，笔者认为这只是表面现象下得出的一种映射关系。笔者认为在js继承机制中，是构造函数 + prototype对象共同起到了原型对象的作用，prototype是对构造函数的补充，原型对象产生了实例对象，而实例对象则好像是继承于原型对象，只不过prototype对象在继承机制中起到了至关重要的作用，解决了需要共享属性和方法的问题。</p>
+<h2 id="构造函数的继承"><a href="#构造函数的继承" class="headerlink" title="构造函数的继承"></a>构造函数的继承</h2><p>既然已经了解了js的继承机制，下面来学习一下一些关于js继承的应用场景。先来看下关于<strong>构造函数之间</strong>的继承（笔者认为这应该也是原型对象之间的继承）。</p>
+<p>先来设定一个Animal的构造函数，一个Cat的构造函数，Cat构造函数需要继承Animal构造函数。这是一个很正常的一个继承场景示例。那么js中有很多方式可以实现。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Animal</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">species</span> = <span class="string">&quot;动物&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="方式1：构造函数绑定"><a href="#方式1：构造函数绑定" class="headerlink" title="方式1：构造函数绑定"></a>方式1：构造函数绑定</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Cat</span>(<span class="params">name,color</span>)&#123;</span><br><span class="line">  <span class="title class_">Animal</span>.<span class="title function_">apply</span>(<span class="variable language_">this</span>, <span class="variable language_">arguments</span>);</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">color</span> = color;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">species</span>); <span class="comment">// 动物</span></span><br></pre></td></tr></table></figure>
+
+<p>这种方式是在Cat构造函数调用时，同时调用了Animal构造函数，在Animal构造函数中在产生的Cat实例对象上设置了species属性。这是在实例对象产生之际做的一次性的属性设置。</p>
+<p><strong>思考点</strong>：从这里来看，笔者认为prototype在继承中并不是必须要用的呀。不过这种方式并不是常用手段。</p>
+<h3 id="方式2：prototype-构造函数"><a href="#方式2：prototype-构造函数" class="headerlink" title="方式2：prototype+构造函数"></a>方式2：prototype+构造函数</h3><p>使用prototype对象来实现继承，是常见的方式。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span> = <span class="keyword">new</span> <span class="title class_">Animal</span>();</span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span> = <span class="title class_">Cat</span>;</span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">species</span>); <span class="comment">// 动物</span></span><br></pre></td></tr></table></figure>
+
+<p>这种方式是将Cat构造函数的prototype对象指向了一个<strong>Animal实例</strong>，那么所有的Cat实例就相当于继承了这个<strong>Animal实例</strong>中的属性。</p>
+<blockquote>
+<p>这种方式相当于完全删除了prototype 对象原先的值，然后赋予一个新值。</p>
+</blockquote>
+<p>那么下面这行代码就显得至关重要了。构造函数默认的prototype对象中，默认提供一个constructor属性，这个属性指向它的构造函数。更重要的是，实例对象中默认也有一个constructor属性，它默认调用prototype对象的constructor属性。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span> = <span class="title class_">Cat</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>因此如果没有上面这行代码，就会导致继承链的紊乱（cat1明明是用构造函数Cat生成的）。</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">alert(Cat.prototype.constructor == Animal); //true</span><br><span class="line">alert(cat1.constructor == Animal); //true</span><br></pre></td></tr></table></figure>
+
+<p><strong>知识点</strong>：切记，实现继承时，一旦人为主观地修改了prototype对象的默认指向，下一步必然是为新的prototype对象加上constructor属性，并将这个属性指回原来的构造函数。</p>
+<h3 id="方式3：直接继承prototype"><a href="#方式3：直接继承prototype" class="headerlink" title="方式3：直接继承prototype"></a>方式3：直接继承prototype</h3><p>延续方式2的思路进行改进，对于Animal中需要共享的属性或方法，可以放到其prototype对象中，那么让Cat直接继承Animal的prototype对象，优点是效率高些（不用建立Animal实例），节省内存。缺点是Cat.prototype和Animal.prototype现在指向了同一个对象，任何对Cat.prototype的修改，都会反映到Animal.prototype。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Animal</span>(<span class="params"></span>)&#123; &#125;</span><br><span class="line"><span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">species</span> = <span class="string">&quot;动物&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span> = <span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span> = <span class="title class_">Cat</span>;</span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">species</span>); <span class="comment">// 动物</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span>); <span class="comment">// Cat</span></span><br></pre></td></tr></table></figure>
+
+<p>因此这种方式是有缺陷的，上面的代码中可以看到Animal.prototype.constructor被变为了Cat。</p>
+<h3 id="方式4：利用空对象作为中介"><a href="#方式4：利用空对象作为中介" class="headerlink" title="方式4：利用空对象作为中介"></a>方式4：利用空对象作为中介</h3><p>为了解决方式3中的缺陷，可以利用空对象作为中介，从而产生了方式4。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> F = <span class="keyword">function</span>(<span class="params"></span>)&#123;&#125;;</span><br><span class="line">F.<span class="property"><span class="keyword">prototype</span></span> = <span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span> = <span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line"><span class="title class_">Cat</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span> = <span class="title class_">Cat</span>;</span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span>); <span class="comment">// Animal</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>F是空对象，所以几乎不占内存。这时，修改Cat的prototype对象，就不会影响到Animal的prototype对象。</p>
+</blockquote>
+<p>利用这种方式，可以封装一个函数，如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">extend</span>(<span class="params">Child, Parent</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> F = <span class="keyword">function</span>(<span class="params"></span>)&#123;&#125;;</span><br><span class="line">    F.<span class="property"><span class="keyword">prototype</span></span> = <span class="title class_">Parent</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line">    <span class="title class_">Child</span>.<span class="property"><span class="keyword">prototype</span></span> = <span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line">    <span class="title class_">Child</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">constructor</span> = <span class="title class_">Child</span>;</span><br><span class="line">    <span class="title class_">Child</span>.<span class="property">uber</span> = <span class="title class_">Parent</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">extend</span>(<span class="title class_">Cat</span>,<span class="title class_">Animal</span>);</span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">species</span>); <span class="comment">// 动物</span></span><br></pre></td></tr></table></figure>
+
+<p>其中有一行需要说明一下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Child</span>.<span class="property">uber</span> = <span class="title class_">Parent</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>意思是为子对象设一个uber属性，这个属性直接指向父对象的prototype属性。（uber是一个德语词，意思是”向上”、”上一层”。）这等于在子对象上打开一条通道，可以直接调用父对象的方法。这一行放在这里，只是为了实现继承的完备性，纯属备用性质。</p>
+</blockquote>
+<h3 id="方式5：拷贝继承"><a href="#方式5：拷贝继承" class="headerlink" title="方式5：拷贝继承"></a>方式5：拷贝继承</h3><p>转换一种思路，将要继承的父对象属性和方法拷贝到子对象中，也能实现继承的目的，如下。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Animal</span>(<span class="params"></span>)&#123;&#125;</span><br><span class="line"><span class="title class_">Animal</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">species</span> = <span class="string">&quot;动物&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">extend2</span>(<span class="params">Child, Parent</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> p = <span class="title class_">Parent</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line">    <span class="keyword">var</span> c = <span class="title class_">Child</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i <span class="keyword">in</span> p) &#123;</span><br><span class="line">        c[i] = p[i];</span><br><span class="line">    &#125;</span><br><span class="line">    c.<span class="property">uber</span> = p;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">extend2</span>(<span class="title class_">Cat</span>, <span class="title class_">Animal</span>);</span><br><span class="line"><span class="keyword">var</span> cat1 = <span class="keyword">new</span> <span class="title class_">Cat</span>(<span class="string">&quot;大毛&quot;</span>,<span class="string">&quot;黄色&quot;</span>);</span><br><span class="line"><span class="title function_">alert</span>(cat1.<span class="property">species</span>); <span class="comment">// 动物</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>思考点</strong>：虽然这也是一种方式，但是笔者认为并不常用。而且这里的代码示例中用的是浅拷贝，使用这种方式的话需要注意浅拷贝的影响。当然你如果很中意这种方式的话，完善上面的代码，改造为深拷贝的方式，更稳妥些。</p>
+<h2 id="非构造函数的继承"><a href="#非构造函数的继承" class="headerlink" title="非构造函数的继承"></a>非构造函数的继承</h2><p>这里学习不通过构造函数，来实现两个实例对象之间的继承。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="title class_">Chinese</span> = &#123;</span><br><span class="line">  <span class="attr">nation</span>:<span class="string">&#x27;中国&#x27;</span></span><br><span class="line">&#125;; <span class="comment">// 普通对象，代表中国人</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> <span class="title class_">Doctor</span> = &#123;</span><br><span class="line">  <span class="attr">career</span>:<span class="string">&#x27;医生&#x27;</span></span><br><span class="line">&#125;; <span class="comment">// 普通对象，代表医生</span></span><br></pre></td></tr></table></figure>
+
+<p>那么如何让Doctor对象继承Chinese对象呢？</p>
+<h3 id="方式1：object-方法"><a href="#方式1：object-方法" class="headerlink" title="方式1：object()方法"></a>方式1：object()方法</h3><p>json格式的发明人Douglas Crockford，提出了一个object()函数，可以做到这一点。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">object</span>(<span class="params">o</span>) &#123;</span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">F</span>(<span class="params"></span>) &#123;&#125;;</span><br><span class="line">    F.<span class="property"><span class="keyword">prototype</span></span> = o;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种方式本质上是借助了一个空对象（构造函数），然后将构造函数的prototype对象指向到了父对象上，然后new出子对象。剩下的就是将子对象需要的属性和方法绑定上去即可。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="title class_">Doctor</span> = <span class="title function_">object</span>(<span class="title class_">Chinese</span>);</span><br><span class="line"><span class="title class_">Doctor</span>.<span class="property">career</span> = <span class="string">&#x27;医生&#x27;</span>;</span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Doctor</span>.<span class="property">nation</span>); <span class="comment">//中国</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>思考点</strong>：上面object方法中的F.prototype对象中的constructor属性值是什么呢？</p>
+<p><strong>知识点</strong>：F.prototype.constructor是Object，也就是说Doctor.constructor &#x3D;&#x3D; Object。原因是传入的Chinese是一个实例对象，即new Object()出来的。因此Doctor.constructor -&gt; F.prototype.constructor -&gt; Chinese.constructor -&gt; Object.prototype.constructor -&gt; Object。</p>
+<p>熟悉Object.create()方法的人，看到这里会发现这种方式跟Object.create方法的内部实现是一样的嘛。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="title class_">Object</span>.<span class="property">create</span> !== <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">  <span class="title class_">Object</span>.<span class="property">create</span> = <span class="keyword">function</span> (<span class="params">obj</span>) &#123;</span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">F</span>(<span class="params"></span>) &#123;&#125;</span><br><span class="line">    F.<span class="property"><span class="keyword">prototype</span></span> = obj;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没错，Object.create就是在没有构造函数的场景下，允许在指定一个实例对象为prototype对象的基础上，创建出另一个实例对象，该实例对象包含了指定实例对象的方法和属性。</p>
+<p>看到这里，笔者认为这里所谓的非构造函数的继承，其实是<strong>对象关联</strong>。《你不知道的JavaScript（上卷）》中大力推荐面向委托的设计，规避js中长久以来基于构造函数，强行模仿类继承设计而带来的诸多复杂情况，令人费解。而书中提到的面向委托的设计，则是基于对象关联展开的，Object.create方法恰恰是实现对象关联的方式。</p>
+<h3 id="方式2：浅拷贝"><a href="#方式2：浅拷贝" class="headerlink" title="方式2：浅拷贝"></a>方式2：浅拷贝</h3><p>利用拷贝的方式，将父对象中的属性和方法拷贝到子对象中去，从而实现继承。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">extendCopy</span>(<span class="params">p</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> c = &#123;&#125;;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i <span class="keyword">in</span> p) &#123; </span><br><span class="line">        c[i] = p[i];</span><br><span class="line">    &#125;</span><br><span class="line">    c.<span class="property">uber</span> = p;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> <span class="title class_">Doctor</span> = <span class="title function_">extendCopy</span>(<span class="title class_">Chinese</span>);</span><br><span class="line"><span class="title class_">Doctor</span>.<span class="property">career</span> = <span class="string">&#x27;医生&#x27;</span>;</span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Doctor</span>.<span class="property">nation</span>); <span class="comment">// 中国</span></span><br></pre></td></tr></table></figure>
+
+<p>但是这是浅拷贝，存在一个问题，如果父对象中的属性是一个数组或对象（当然方法也是对象），那么子对象中拷贝到的只是一个内存地址，子对象对拷贝过来的属性修改后会影响到父对象中的属性值，这是很危险的。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Chinese</span>.<span class="property">birthPlaces</span> = [<span class="string">&#x27;北京&#x27;</span>,<span class="string">&#x27;上海&#x27;</span>,<span class="string">&#x27;香港&#x27;</span>];</span><br><span class="line"><span class="keyword">var</span> <span class="title class_">Doctor</span> = <span class="title function_">extendCopy</span>(<span class="title class_">Chinese</span>);</span><br><span class="line"><span class="title class_">Doctor</span>.<span class="property">birthPlaces</span>.<span class="title function_">push</span>(<span class="string">&#x27;厦门&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Doctor</span>.<span class="property">birthPlaces</span>); <span class="comment">//北京, 上海, 香港, 厦门</span></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Chinese</span>.<span class="property">birthPlaces</span>); <span class="comment">//北京, 上海, 香港, 厦门</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>extendCopy()只是拷贝基本类型的数据，我们把这种拷贝叫做”浅拷贝”。这是早期jQuery实现继承的方式。</p>
+</blockquote>
+<h3 id="方式3：深拷贝"><a href="#方式3：深拷贝" class="headerlink" title="方式3：深拷贝"></a>方式3：深拷贝</h3><p>依然是拷贝的方式，为了解决浅拷贝的问题，改用深拷贝。</p>
+<blockquote>
+<p>所谓”深拷贝”，就是能够实现真正意义上的数组和对象的拷贝。它的实现并不难，只要递归调用”浅拷贝”就行了。</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">deepCopy</span>(<span class="params">p, c</span>) &#123;</span><br><span class="line">	<span class="keyword">var</span> c = c || &#123;&#125;;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">var</span> i <span class="keyword">in</span> p) &#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">typeof</span> p[i] === <span class="string">&#x27;object&#x27;</span>) &#123;</span><br><span class="line">			c[i] = (p[i].<span class="property">constructor</span> === <span class="title class_">Array</span>) ? [] : &#123;&#125;;</span><br><span class="line">			<span class="title function_">deepCopy</span>(p[i], c[i]);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			c[i] = p[i];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>子对象上修改继承来的属性时，则不会再影响到父对象了。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> <span class="title class_">Doctor</span> = <span class="title function_">deepCopy</span>(<span class="title class_">Chinese</span>);</span><br><span class="line"><span class="title class_">Chinese</span>.<span class="property">birthPlaces</span> = [<span class="string">&#x27;北京&#x27;</span>,<span class="string">&#x27;上海&#x27;</span>,<span class="string">&#x27;香港&#x27;</span>];</span><br><span class="line"><span class="title class_">Doctor</span>.<span class="property">birthPlaces</span>.<span class="title function_">push</span>(<span class="string">&#x27;厦门&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Doctor</span>.<span class="property">birthPlaces</span>); <span class="comment">//北京, 上海, 香港, 厦门</span></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">Chinese</span>.<span class="property">birthPlaces</span>); <span class="comment">//北京, 上海, 香港</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>综上所述，笔者认为js中的继承，prototype对象是最常用的手段，当然还有其他方式，比如拷贝，但并不常见。看到【构造函数的继承】中的【方式2:prototype+构造函数】，提到将prototype对象指向实例对象是有些许缺陷的，但再看【构造函数的继承】中的【方式4:利用空对象作为中介】和【非构造函数的继承】中的【方式1:object()方法】，不难发现，无论是构造函数还是非构造函数的继承，实现方式最终的本质依然是prototype对象指向了一个实例对象，只不过这些实现方式中解决了那些缺陷。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/js/" rel="tag"># js</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/12/20/%E7%AE%97%E6%B3%95%E4%B9%A6%E5%8D%95/" rel="prev" title="算法书单">
+                  <i class="fa fa-chevron-left"></i> 算法书单
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/" rel="next" title="理解原型链中的__proto__与prototype">
+                  理解原型链中的__proto__与prototype <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

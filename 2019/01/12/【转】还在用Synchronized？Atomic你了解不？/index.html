@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="原文作者：java3y（微信号） 原文链接：https:&#x2F;&#x2F;mp.weixin.qq.com&#x2F;s&#x2F;SGw1XtRptbEi6llSYkZfyQ  前言首先来看下摘录自《阿里巴巴 Java开发手册》的描述。  如果是count++操作，使用如下类实现: AtomicInteger count &#x3D; new AtomicInteger(); count.addAndGet(1);如果是 JD">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】还在用Synchronized？Atomic你了解不？">
+<meta property="og:url" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="原文作者：java3y（微信号） 原文链接：https:&#x2F;&#x2F;mp.weixin.qq.com&#x2F;s&#x2F;SGw1XtRptbEi6llSYkZfyQ  前言首先来看下摘录自《阿里巴巴 Java开发手册》的描述。  如果是count++操作，使用如下类实现: AtomicInteger count &#x3D; new AtomicInteger(); count.addAndGet(1);如果是 JD">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img1.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img2.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img3.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img4.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img5.jpg">
+<meta property="article:published_time" content="2019-01-12T03:08:56.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="并发">
+<meta property="article:tag" content="多线程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img1.jpg">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/","path":"2019/01/12/【转】还在用Synchronized？Atomic你了解不？/","title":"【转】还在用Synchronized？Atomic你了解不？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>【转】还在用Synchronized？Atomic你了解不？ | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E9%93%BA%E5%9E%AB"><span class="nav-number">2.</span> <span class="nav-text">基础铺垫</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CAS%E5%86%8D%E6%9D%A5%E7%9C%8B%E7%9C%8B"><span class="nav-number">2.1.</span> <span class="nav-text">CAS再来看看</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CAS%E5%A4%B1%E8%B4%A5%E9%87%8D%E8%AF%95%EF%BC%88%E8%87%AA%E6%97%8B%EF%BC%89"><span class="nav-number">2.1.1.</span> <span class="nav-text">CAS失败重试（自旋）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CAS%E5%A4%B1%E8%B4%A5%E4%BB%80%E4%B9%88%E9%83%BD%E4%B8%8D%E5%81%9A"><span class="nav-number">2.1.2.</span> <span class="nav-text">CAS失败什么都不做</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E5%8F%98%E9%87%8F%E7%B1%BB%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.</span> <span class="nav-text">原子变量类简单介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E5%8F%98%E9%87%8F%E7%B1%BB%E4%BD%BF%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">原子变量类使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ABA%E9%97%AE%E9%A2%98"><span class="nav-number">3.2.</span> <span class="nav-text">ABA问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3ABA%E9%97%AE%E9%A2%98"><span class="nav-number">3.3.</span> <span class="nav-text">解决ABA问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LongAdder%E6%80%A7%E8%83%BD%E6%AF%94AtomicLong%E8%A6%81%E5%A5%BD"><span class="nav-number">3.4.</span> <span class="nav-text">LongAdder性能比AtomicLong要好</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="【转】还在用Synchronized？Atomic你了解不？ | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】还在用Synchronized？Atomic你了解不？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-01-12 11:08:56" itemprop="dateCreated datePublished" datetime="2019-01-12T11:08:56+08:00">2019-01-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BD%AC%E5%8F%91%E5%A5%BD%E6%96%87/" itemprop="url" rel="index"><span itemprop="name">转发好文</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>原文作者：java3y（微信号）</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/SGw1XtRptbEi6llSYkZfyQ">https://mp.weixin.qq.com/s/SGw1XtRptbEi6llSYkZfyQ</a></p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>首先来看下摘录自《阿里巴巴 Java开发手册》的描述。</p>
+<blockquote>
+<p>如果是count++操作，使用如下类实现: AtomicInteger count &#x3D; new AtomicInteger(); count.addAndGet(1);如果是 JDK8，推荐使用 LongAdder 对象，比 AtomicLong 性能更好(减少乐观锁的重试次数)。</p>
+</blockquote>
+<p>之前在学习的时候也看过AtomicInteger类很多次了，一直没有去做相关的笔记。现在遇到问题了，于是就过来写写笔记，并希望在学习的过程中解决掉问题。</p>
+<span id="more"></span>
+
+<h2 id="基础铺垫"><a href="#基础铺垫" class="headerlink" title="基础铺垫"></a>基础铺垫</h2><p>先来看个栗子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AtomicMain</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">ExecutorService</span> <span class="variable">service</span> <span class="operator">=</span> Executors.newCachedThreadPool();</span><br><span class="line"></span><br><span class="line">        <span class="type">Count</span> <span class="variable">count</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Count</span>();</span><br><span class="line">        <span class="comment">// 100个线程对共享变量进行加1</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">            service.execute(() -&gt; count.increase());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待上述的线程执行完</span></span><br><span class="line">        service.shutdown();</span><br><span class="line">        service.awaitTermination(<span class="number">1</span>, TimeUnit.DAYS);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">&quot;公众号：Java3y---------&quot;</span>);</span><br><span class="line">        System.out.println(count.getCount());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Count</span>&#123;</span><br><span class="line">    <span class="comment">// 共享变量</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">Integer</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">public</span> Integer <span class="title function_">getCount</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> count;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span>  <span class="keyword">void</span> <span class="title function_">increase</span><span class="params">()</span> &#123;</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>你们猜猜得出的结果是多少？是100吗？</p>
+<p>多运行几次可以发现：结果是不确定的，可能是95，也可能是98，也可能是100。</p>
+<p>根据结果我们得知：上面的代码是线程不安全的！如果线程安全的代码，多次执行的结果是一致的！</p>
+<p>我们可以发现问题所在：count++并不是原子操作。因为count++需要经过读取-修改-写入三个步骤。举个例子：</p>
+<ul>
+<li>如果某一个时刻：线程A读到count的值是10，线程B读到count的值也是10</li>
+<li>线程A对count++，此时count的值为11</li>
+<li>线程B对count++，此时count的值也是11(因为线程B读到的count是10)</li>
+<li>所以到这里应该知道为啥我们的结果是不确定了吧。</li>
+</ul>
+<p>要将上面的代码变成线程安全的(每次得出的结果是100)，那也很简单，毕竟我们是学过synchronized锁的人。</p>
+<p>在increase()加synchronized锁就好了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">increase</span><span class="params">()</span> &#123;</span><br><span class="line">    count++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>无论执行多少次，得出的都是100。从上面的代码我们也可以发现，只做一个++这么简单的操作，都用到了synchronized锁，未免有点小题大做了。</p>
+<blockquote>
+<p>Synchronized锁是独占的，意味着如果有别的线程在执行，当前线程只能是等待！</p>
+</blockquote>
+<p>于是我们<strong>原子变量</strong>的类就登场了！</p>
+<h3 id="CAS再来看看"><a href="#CAS再来看看" class="headerlink" title="CAS再来看看"></a>CAS再来看看</h3><p>在写文章之前，本以为对CAS有一定的了解了(因为之前已经看过相关概念，以为自己理解了)..但真正敲起键盘写的时候，还是发现没完全弄懂…所以再来看看CAS吧。</p>
+<p>来源维基百科：</p>
+<blockquote>
+<p>比较并交换(compare and swap, CAS)，是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。</p>
+</blockquote>
+<p>CAS有3个操作数：</p>
+<ul>
+<li>内存值V（修改目标现有最新的值）</li>
+<li>预期值A（读取到的修改目标未被修改之前的值，预在这个值上做修改）</li>
+<li>要修改的新值B</li>
+</ul>
+<p>当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值(A和内存值V相同时，将内存值V修改为B)，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试(或者什么都不做)。</p>
+<img src="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img1.jpg" class="">
+
+<p>我们可以发现CAS有两种情况：</p>
+<ul>
+<li>如果内存值V和我们的预期值A相等，则将内存值修改为B，操作成功！</li>
+<li>如果内存值V和我们的预期值A不相等，一般也有两种情况：<ul>
+<li>重试(自旋)</li>
+<li>什么都不做</li>
+</ul>
+</li>
+</ul>
+<p>我们再继续往下看，如果内存值V和我们的预期值A不相等时，应该什么时候重试，什么时候什么都不做。</p>
+<h4 id="CAS失败重试（自旋）"><a href="#CAS失败重试（自旋）" class="headerlink" title="CAS失败重试（自旋）"></a>CAS失败重试（自旋）</h4><p>比如说，我上面用了100个线程，对count值进行加1。我们都知道：如果在线程安全的情况下，这个count值最终的结果一定是为100的。那就意味着：每个线程都会对这个count值实质地进行加1。</p>
+<p>我继续画张图来说明一下CAS是如何重试(循环再试)的：</p>
+<img src="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img2.jpg" class="">
+
+<p>上面图只模拟出两个线程的情况，但足够说明问题了。</p>
+<h4 id="CAS失败什么都不做"><a href="#CAS失败什么都不做" class="headerlink" title="CAS失败什么都不做"></a>CAS失败什么都不做</h4><p>上面是每个线程都要为count值加1，但我们也可以有这种情况：将count值设置为5</p>
+<p>我也来画个图说明一下：</p>
+<img src="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img3.jpg" class="">
+
+<p>理解CAS的核心就是：CAS是原子性的，虽然你可能看到比较后再修改(compare and swap)觉得会有两个操作，但终究是原子性的！</p>
+<h2 id="原子变量类简单介绍"><a href="#原子变量类简单介绍" class="headerlink" title="原子变量类简单介绍"></a>原子变量类简单介绍</h2><p>原子变量类在java.util.concurrent.atomic包下，总体来看有这么多个：</p>
+<img src="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img4.jpg" class="">
+
+<p>我们可以对其进行分类：</p>
+<p>基本类型：</p>
+<ul>
+<li>AtomicBoolean：布尔型</li>
+<li>AtomicInteger：整型</li>
+<li>AtomicLong：长整型</li>
+</ul>
+<p>数组：</p>
+<ul>
+<li>AtomicIntegerArray：数组里的整型</li>
+<li>AtomicLongArray：数组里的长整型</li>
+<li>AtomicReferenceArray：数组里的引用类型</li>
+</ul>
+<p>引用类型：</p>
+<ul>
+<li>AtomicReference：引用类型</li>
+<li>AtomicStampedReference：带有版本号的引用类型</li>
+<li>AtomicMarkableReference：带有标记位的引用类型</li>
+</ul>
+<p>对象的属性：</p>
+<ul>
+<li>AtomicIntegerFieldUpdater：对象的属性是整型</li>
+<li>AtomicLongFieldUpdater：对象的属性是长整型</li>
+<li>AtomicReferenceFieldUpdater：对象的属性是引用类型</li>
+</ul>
+<p>JDK8新增DoubleAccumulator、LongAccumulator、DoubleAdder、LongAdder<br>是对AtomicLong等类的改进。比如LongAccumulator与LongAdder在高并发环境下比AtomicLong更高效。<br>Atomic包里的类基本都是使用Unsafe实现的包装类。</p>
+<p>Unsafe里边有几个我们喜欢的方法(CAS)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第一和第二个参数代表对象的实例以及地址，第三个参数代表期望值，第四个参数代表更新值</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="type">boolean</span> <span class="title function_">compareAndSwapObject</span><span class="params">(Object var1, <span class="type">long</span> var2, Object var4, Object var5)</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="type">boolean</span> <span class="title function_">compareAndSwapInt</span><span class="params">(Object var1, <span class="type">long</span> var2, <span class="type">int</span> var4, <span class="type">int</span> var5)</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="type">boolean</span> <span class="title function_">compareAndSwapLong</span><span class="params">(Object var1, <span class="type">long</span> var2, <span class="type">long</span> var4, <span class="type">long</span> var6)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>从原理上概述就是：Atomic包的类的实现绝大调用Unsafe的方法，而Unsafe底层实际上是调用C代码，C代码调用汇编，最后生成出一条CPU指令cmpxchg，完成操作。这也就为啥CAS是原子性的，因为它是一条CPU指令，不会被打断。</p>
+<h3 id="原子变量类使用"><a href="#原子变量类使用" class="headerlink" title="原子变量类使用"></a>原子变量类使用</h3><p>既然我们上面也说到了，使用Synchronized锁有点小题大作了，我们用原子变量类来改一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Count</span>&#123;</span><br><span class="line">    <span class="comment">// 共享变量(使用AtomicInteger来替代Synchronized锁)</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">AtomicInteger</span> <span class="variable">count</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Integer <span class="title function_">getCount</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> count.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">increase</span><span class="params">()</span> &#123;</span><br><span class="line">        count.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Main方法还是如上</span></span><br></pre></td></tr></table></figure>
+
+<p>修改完，无论执行多少次，我们的结果永远是100！</p>
+<p>其实Atomic包下原子类的使用方式都不会差太多，了解原子类各种类型，看看API，基本就会用了(网上也写得比较详细，所以我这里果断偷懒了)…</p>
+<h3 id="ABA问题"><a href="#ABA问题" class="headerlink" title="ABA问题"></a>ABA问题</h3><p>使用CAS有个缺点就是ABA的问题，什么是ABA问题呢？首先我用文字描述一下：</p>
+<ul>
+<li>现在我有一个变量count&#x3D;10，现在有三个线程，分别为A、B、C。</li>
+<li>线程A和线程C同时读到count变量，所以线程A和线程C的内存值和预期值都为10。</li>
+<li>此时线程A使用CAS将count值修改成100。</li>
+<li>修改完后，就在这时，线程B进来了，读取得到count的值为100(内存值和预期值都是100)，将count值修改成10。</li>
+<li>线程C拿到执行权，发现内存值是10，预期值也是10，将count值修改成11。</li>
+</ul>
+<p>上面的操作都可以正常执行完的，这样会发生什么问题呢？？线程C无法得知线程A和线程B修改过的count值，这样是有风险的。</p>
+<p>下面我再画个图来说明一下ABA的问题(以链表为例)：</p>
+<img src="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/img5.jpg" class="">
+
+<h3 id="解决ABA问题"><a href="#解决ABA问题" class="headerlink" title="解决ABA问题"></a>解决ABA问题</h3><p>要解决ABA的问题，我们可以使用JDK给我们提供的AtomicStampedReference和AtomicMarkableReference类。</p>
+<p>AtomicStampedReference：</p>
+<blockquote>
+<p>An {@code AtomicStampedReference} maintains an object referencealong with an integer “stamp”, that can be updated atomically.</p>
+</blockquote>
+<p>简单来说就是在给为这个对象提供了一个版本，并且这个版本如果被修改了，是自动更新的。</p>
+<p>原理大概就是：维护了一个Pair对象，Pair对象存储我们的对象引用和一个stamp值。每次CAS比较的是两个Pair对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Pair对象</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Pair</span>&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">final</span> T reference;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> stamp;</span><br><span class="line">        <span class="keyword">private</span> <span class="title function_">Pair</span><span class="params">(T reference, <span class="type">int</span> stamp)</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.reference = reference;</span><br><span class="line">            <span class="built_in">this</span>.stamp = stamp;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">static</span> &lt;T&gt; Pair&lt;T&gt; <span class="title function_">of</span><span class="params">(T reference, <span class="type">int</span> stamp)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Pair</span>&lt;T&gt;(reference, stamp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Pair&lt;V&gt; pair;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 比较的是Pari对象</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">compareAndSet</span><span class="params">(V   expectedReference,</span></span><br><span class="line"><span class="params">                                 V   newReference,</span></span><br><span class="line"><span class="params">                                 <span class="type">int</span> expectedStamp,</span></span><br><span class="line"><span class="params">                                 <span class="type">int</span> newStamp)</span> &#123;</span><br><span class="line">        Pair&lt;V&gt; current = pair;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">            expectedReference == current.reference &amp;&amp;</span><br><span class="line">            expectedStamp == current.stamp &amp;&amp;</span><br><span class="line">            ((newReference == current.reference &amp;&amp;</span><br><span class="line">              newStamp == current.stamp) ||</span><br><span class="line">             casPair(current, Pair.of(newReference, newStamp)));</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为多了一个版本号比较，所以就不会存在ABA的问题了。</p>
+<h3 id="LongAdder性能比AtomicLong要好"><a href="#LongAdder性能比AtomicLong要好" class="headerlink" title="LongAdder性能比AtomicLong要好"></a>LongAdder性能比AtomicLong要好</h3><blockquote>
+<p>如果是 JDK8，推荐使用 LongAdder 对象，比 AtomicLong 性能更好(减少乐观锁的重试次数)。</p>
+</blockquote>
+<p>去查阅了一些博客和资料，大概的意思就是：</p>
+<ul>
+<li>使用AtomicLong时，在高并发下大量线程会同时去竞争更新同一个原子变量，但是由于同时只有一个线程的CAS会成功，所以其他线程会不断尝试自旋尝试CAS操作，这会浪费不少的CPU资源。</li>
+<li>而LongAdder可以概括成这样：内部核心数据value分离成一个数组(Cell)，每个线程访问时,通过哈希等算法映射到其中一个数字进行计数，而最终的计数结果，则为这个数组的求和累加。<ul>
+<li>简单来说就是将一个值分散成多个值，在并发的时候就可以分散压力，性能有所提高。</li>
+</ul>
+</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>AtomicLong与LongAdder性能对比<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/45489739">https://zhuanlan.zhihu.com/p/45489739</a></li>
+</ul>
+</li>
+<li>LongAdder源码详解<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/38288416">https://zhuanlan.zhihu.com/p/38288416</a></li>
+</ul>
+</li>
+<li>Java并发编程札记-目录<ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/panweiwei1994/article/details/78483167">https://blog.csdn.net/panweiwei1994/article/details/78483167</a></li>
+</ul>
+</li>
+<li>《Java并发编程实战》</li>
+<li>《Java并发编程的艺术》</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag"># 并发</a>
+              <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/" rel="prev" title="理解原型链中的__proto__与prototype">
+                  <i class="fa fa-chevron-left"></i> 理解原型链中的__proto__与prototype
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/" rel="next" title="【转】Redis的n种妙用，不仅仅是缓存">
+                  【转】Redis的n种妙用，不仅仅是缓存 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

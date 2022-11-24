@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="前言前些日子，在优化一个列表页面的显示效果，列表中的列比较多，优化的目的就是希望在浏览器窗口宽度小到一定程度后，列表上可以出现横向滚动条来显示列表中较多的数据。否则的话，列表中的数据会随着窗口宽度缩小而出现拥挤，几乎没有可视效果。 列表采用table标签显示，其html上下文结构如下： 12345&lt;div style&#x3D;&quot;overflow-x: auto;width: 100%;&amp;q">
+<meta property="og:type" content="article">
+<meta property="og:title" content="页面中滚动条的一些总结">
+<meta property="og:url" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="前言前些日子，在优化一个列表页面的显示效果，列表中的列比较多，优化的目的就是希望在浏览器窗口宽度小到一定程度后，列表上可以出现横向滚动条来显示列表中较多的数据。否则的话，列表中的数据会随着窗口宽度缩小而出现拥挤，几乎没有可视效果。 列表采用table标签显示，其html上下文结构如下： 12345&lt;div style&#x3D;&quot;overflow-x: auto;width: 100%;&amp;q">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img1.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img2.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img3.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img4.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img5.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img2.png">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img6.png">
+<meta property="article:published_time" content="2018-12-13T02:45:42.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img1.png">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/","path":"2018/12/13/页面中滚动条的一些总结/","title":"页面中滚动条的一些总结"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>页面中滚动条的一些总结 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#overflow-x%E5%92%8Coverflow-y%E7%9A%84%E4%B8%80%E4%B8%AA%E2%80%9C%E7%A7%98%E5%AF%86%E2%80%9D"><span class="nav-number">2.</span> <span class="nav-text">overflow-x和overflow-y的一个“秘密”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AA%E5%87%BA%E7%8E%B0%E6%A8%AA%E5%90%91%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E9%9C%80%E8%A6%81"><span class="nav-number">3.</span> <span class="nav-text">只出现横向滚动条的需要</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%951-%E9%99%90%E5%88%B6%E6%96%87%E6%9C%AC%E5%85%83%E7%B4%A0%E4%B8%8D%E6%8D%A2%E8%A1%8C"><span class="nav-number">3.1.</span> <span class="nav-text">方法1: 限制文本元素不换行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%952%EF%BC%9A%E6%96%87%E6%9C%AC%E5%85%83%E7%B4%A0%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AABlock%E7%88%B6%E5%85%83%E7%B4%A0%EF%BC%8C%E5%90%8C%E6%97%B6%E8%AE%BE%E7%BD%AE%E5%AE%BD%E5%BA%A6%E5%A4%A7%E4%BA%8E%E5%86%85%E5%AE%B9%E5%8C%BA%E5%9F%9F%E9%99%90%E5%88%B6%E7%9A%84%E5%AE%BD%E5%BA%A6"><span class="nav-number">3.2.</span> <span class="nav-text">方法2：文本元素添加一个Block父元素，同时设置宽度大于内容区域限制的宽度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AA%E5%87%BA%E7%8E%B0%E7%BA%B5%E5%90%91%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E9%9C%80%E8%A6%81"><span class="nav-number">4.</span> <span class="nav-text">只出现纵向滚动条的需要</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%951-%E5%A6%82%E6%9E%9C%E5%8F%AA%E6%98%AF%E6%96%87%E6%9C%AC%E5%85%83%E7%B4%A0"><span class="nav-number">4.1.</span> <span class="nav-text">方法1: 如果只是文本元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%952-%E6%96%87%E6%9C%AC%E5%85%83%E7%B4%A0%E6%9C%89Block%E7%88%B6%E5%85%83%E7%B4%A0%EF%BC%8C%E8%AE%BE%E7%BD%AE%E5%AE%BD%E5%BA%A6%E5%B0%8F%E4%BA%8E%E5%86%85%E5%AE%B9%E5%8C%BA%E5%9F%9F%E9%99%90%E5%88%B6%E7%9A%84%E5%AE%BD%E5%BA%A6"><span class="nav-number">4.2.</span> <span class="nav-text">方法2: 文本元素有Block父元素，设置宽度小于内容区域限制的宽度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="页面中滚动条的一些总结 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          页面中滚动条的一些总结
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-12-13 10:45:42" itemprop="dateCreated datePublished" datetime="2018-12-13T10:45:42+08:00">2018-12-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BC%80%E5%8F%91%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">开发笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前些日子，在优化一个列表页面的显示效果，列表中的列比较多，优化的目的就是希望在浏览器窗口宽度小到一定程度后，列表上可以出现横向滚动条来显示列表中较多的数据。否则的话，列表中的数据会随着窗口宽度缩小而出现拥挤，几乎没有可视效果。</p>
+<p>列表采用table标签显示，其html上下文结构如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;overflow-x: auto;width: 100%;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">table</span> <span class="attr">style</span>=<span class="string">&quot;width: 100%;&quot;</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;/<span class="name">table</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<span id="more"></span> 
+
+<p>使用<strong>overflow-x:auto</strong>本意是希望当table列表中的内容超出一定宽度时可以自动出现滚动条，但是由于table列表并没有做高度上的限制，同时width为父元素div宽度的100%，所以当浏览器窗口缩小时，table中的内容会优先纵向拉伸，出现内容挤压的结果。而且<strong>overflow-x:auto</strong>能保证只在横向出现滚动条来扩展显示内容吗？也不尽然！</p>
+<h2 id="overflow-x和overflow-y的一个“秘密”"><a href="#overflow-x和overflow-y的一个“秘密”" class="headerlink" title="overflow-x和overflow-y的一个“秘密”"></a>overflow-x和overflow-y的一个“秘密”</h2><p>当元素区域内容产生移出时，overflow-x控制的是内容在左&#x2F;右边缘的处理方式，overflow-y控制的是内容在上&#x2F;下边缘的处理方式。</p>
+<p>先来看下面的一个栗子。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img1.png" class="">
+
+<p>虽然设置了<strong>overflow-x:auto</strong>，但是内容向下扩展了，只出现了纵向滚动条。why？其实这里面包含了2个知识点。</p>
+<p><strong>知识点1：</strong></p>
+<blockquote>
+<p>设置一个轴为visible（默认值），同时设置另一个轴为不同的值，会导致设置visible的轴的行为会变成auto。</p>
+</blockquote>
+<p>上面的栗子中，由于overflow-y没有设置，所以采用默认值为visible。但是overflow-x和overflow-y的值不同，所以overflow-y的值变为了auto。</p>
+<p>那么<strong>overflow-x:auto</strong>和<strong>overflow-y:auto</strong>，等同于<strong>overflow:auto</strong>。<strong>overflow:xxx</strong>等同于<strong>overflow-x:xxx</strong>和<strong>overflow-y:xxx</strong>。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img2.png" class="">
+
+<p><strong>知识点2：</strong></p>
+<p>由于上面栗子中div的子元素是文本元素，而文本元素在宽度不够时是可以换行显示的，同时div允许纵向滚动条（<strong>overflow:auto</strong>）出现，因此优先在纵向扩展显示了所有内容，只出现了纵向滚动条。笔者认为这应该是浏览器默认的机制吧。</p>
+<h2 id="只出现横向滚动条的需要"><a href="#只出现横向滚动条的需要" class="headerlink" title="只出现横向滚动条的需要"></a>只出现横向滚动条的需要</h2><p>仍然以上面的栗子展开讨论，笔者好奇有没有办法使内容只在横向扩展显示，只出现横向滚动条呢？笔者在此汇总2种方法。</p>
+<h3 id="方法1-限制文本元素不换行"><a href="#方法1-限制文本元素不换行" class="headerlink" title="方法1: 限制文本元素不换行"></a>方法1: 限制文本元素不换行</h3><p>这个方法笔者认为很“生硬”，通过设置文本元素不能换行来达到目的，但是显示效果不是很好。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img3.png" class="">
+
+<h3 id="方法2：文本元素添加一个Block父元素，同时设置宽度大于内容区域限制的宽度"><a href="#方法2：文本元素添加一个Block父元素，同时设置宽度大于内容区域限制的宽度" class="headerlink" title="方法2：文本元素添加一个Block父元素，同时设置宽度大于内容区域限制的宽度"></a>方法2：文本元素添加一个Block父元素，同时设置宽度大于内容区域限制的宽度</h3><p>这个方法是最常见的方法了，内容区域限制的宽度为200px，但是p元素需要的宽度为1500px。为了满足p元素的需要，其div父元素优先出现了横向滚动条来满足1500px的显示宽度。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img4.png" class="">
+
+<p>可以看到，横向滚动条的方式展现1500px的宽度，由于无法容下全部的文本元素，因此依然产生了换行，但并未出现纵向滚动条。如果把内容区域的高度限制设置的小一些，是可以出现纵向滚动条的。</p>
+<p>这个过程可以理解为优先在横向进行内容展现，宽度不够，滚动条来凑<del>其次在纵向上进行展现，高度不够，滚动条来凑</del></p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img5.png" class="">
+
+<p>笔者也是应用这种方法解决了本文开始提到的列表优化问题，具体如下。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">style</span>=<span class="string">&quot;overflow-x: auto;width: 100%;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">table</span> <span class="attr">style</span>=<span class="string">&quot;min-width: 1360px;&quot;</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;/<span class="name">table</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>table就相当于方法中提到的p元素了，由于高度上空间足够，所以不必担心列表上出现纵向滚动条。因为div的宽度是100%，随着窗口的缩小，div的宽度是变化的，把table的最小宽度设定为一个固定值，当窗口缩小到小于table的最小宽度时，触发横向滚动条显示列表内容。</p>
+<h2 id="只出现纵向滚动条的需要"><a href="#只出现纵向滚动条的需要" class="headerlink" title="只出现纵向滚动条的需要"></a>只出现纵向滚动条的需要</h2><p>有没有只需要纵向扩展显示内容，只出现纵向滚动条的情况呢？</p>
+<h3 id="方法1-如果只是文本元素"><a href="#方法1-如果只是文本元素" class="headerlink" title="方法1: 如果只是文本元素"></a>方法1: 如果只是文本元素</h3><p>如果限制区域内只是文本元素的话，凭着自动换行，内容会优先在纵向进行展示，只会出现纵向滚动条，这种情况上面也有提到。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img2.png" class="">
+
+<h3 id="方法2-文本元素有Block父元素，设置宽度小于内容区域限制的宽度"><a href="#方法2-文本元素有Block父元素，设置宽度小于内容区域限制的宽度" class="headerlink" title="方法2: 文本元素有Block父元素，设置宽度小于内容区域限制的宽度"></a>方法2: 文本元素有Block父元素，设置宽度小于内容区域限制的宽度</h3><p>由于横向上宽度没有超过限制，所以不会出现横向滚动条，这是前提。那么当内容高度超出内容区域限制的高度时，自然只会出现纵向滚动条。</p>
+<img src="/2018/12/13/%E9%A1%B5%E9%9D%A2%E4%B8%AD%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93/img6.png" class="">
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>通过这次研究学习，笔者对滚动条有了进一步的认知与理解，后续还需继续努力呀，熟悉滚动条机制还是蛮重要的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/html/" rel="tag"># html</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/12/07/table%E4%B8%AD%E7%9A%84%E5%88%97%E5%AE%BD%E5%A6%82%E4%BD%95%E5%9B%BA%E5%AE%9A%EF%BC%9F/" rel="prev" title="table中的列宽如何固定？">
+                  <i class="fa fa-chevron-left"></i> table中的列宽如何固定？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/12/20/%E7%AE%97%E6%B3%95%E4%B9%A6%E5%8D%95/" rel="next" title="算法书单">
+                  算法书单 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

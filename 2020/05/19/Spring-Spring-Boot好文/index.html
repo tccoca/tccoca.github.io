@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Spring Spring中的循环依赖原理（转） @Async的使用、原理及使用时可能导致的问题（转） Spring Validation最佳实践及其实现原理（转） 自定义注解！绝对是程序员装逼的利器（转） Spring中那些让你爱不释手的代码技巧（转）  Spring Boot 这么写参数校验(validator)就不会被劝退了~（转） - 源 SpringBoot 中优雅处理参数验证（转） -">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-Spring-Boot好文">
+<meta property="og:url" content="https://tccoca.github.io/2020/05/19/Spring-Spring-Boot%E5%A5%BD%E6%96%87/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="Spring Spring中的循环依赖原理（转） @Async的使用、原理及使用时可能导致的问题（转） Spring Validation最佳实践及其实现原理（转） 自定义注解！绝对是程序员装逼的利器（转） Spring中那些让你爱不释手的代码技巧（转）  Spring Boot 这么写参数校验(validator)就不会被劝退了~（转） - 源 SpringBoot 中优雅处理参数验证（转） -">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-05-19T07:31:47.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="Spring Boot">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2020/05/19/Spring-Spring-Boot%E5%A5%BD%E6%96%87/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2020/05/19/Spring-Spring-Boot%E5%A5%BD%E6%96%87/","path":"2020/05/19/Spring-Spring-Boot好文/","title":"Spring-Spring-Boot好文"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring-Spring-Boot好文 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring"><span class="nav-number">1.</span> <span class="nav-text">Spring</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Boot"><span class="nav-number">2.</span> <span class="nav-text">Spring Boot</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Boot%E7%89%88%E6%9C%AC%E5%8D%87%E7%BA%A7"><span class="nav-number">3.</span> <span class="nav-text">Spring Boot版本升级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Cloud"><span class="nav-number">4.</span> <span class="nav-text">Spring Cloud</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Mybatis"><span class="nav-number">5.</span> <span class="nav-text">Mybatis</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2020/05/19/Spring-Spring-Boot%E5%A5%BD%E6%96%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Spring-Spring-Boot好文 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring-Spring-Boot好文
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-05-19 15:31:47" itemprop="dateCreated datePublished" datetime="2020-05-19T15:31:47+08:00">2020-05-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%94%B6%E8%97%8F/" itemprop="url" rel="index"><span itemprop="name">收藏</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a>Spring</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/0EwkxNTFs6oW3Sl0P9sFXg">Spring中的循环依赖原理（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/wH2ehjwZXEfYWqcokPtlVA">@Async的使用、原理及使用时可能导致的问题（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/bmVvqhzWmK2hA2gurYB4wg">Spring Validation最佳实践及其实现原理（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/JDLr0a7znKmpFIKIHIWz-A">自定义注解！绝对是程序员装逼的利器（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/rONWZ1YcnGc7QDW4-XOKlA">Spring中那些让你爱不释手的代码技巧（转）</a></li>
+</ul>
+<h1 id="Spring-Boot"><a href="#Spring-Boot" class="headerlink" title="Spring Boot"></a>Spring Boot</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/m-uPVQhYsRYbCQ0J9bZsmA">这么写参数校验(validator)就不会被劝退了~（转）</a> - <a target="_blank" rel="noopener" href="https://juejin.im/post/5d3fbeb46fb9a06b317b3c48">源</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/70E6rYSSsZW6HxK9Ks8Kug">SpringBoot 中优雅处理参数验证（转）</a> - <a target="_blank" rel="noopener" href="http://www.mydlq.club/article/49/">源</a></li>
+<li><a target="_blank" rel="noopener" href="https://view.inews.qq.com/w/WXN20200217005641020?refer=nwx&bat_id=1112086514&cur_pos=0&activeapp=weishi&grp_type=region&rg=4&newsGid=20200217_r2415930&grp_index=2&grp_id=1312086520&rate=2&pushid=2020021703&bkt=0&openid=o04IBAOWlitCRnRyS34AtXqrSRjk&tbkt=H&ft=71&groupid=1581984077&msgid=0">SpringBoot 多种读取配置文件中参数的方式（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/ESfKk7WSFfVLmLIFGFhGCw">SpringBoot使用Redis实现数据缓存(上)（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/8IktJAHrWQ3WSx2risrEGg">SpringBoot使用Redis实现数据缓存(下)（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.im/post/5ebf503ae51d4534287a65bd">Spring Boot + Jasypt 实现敏感配置属性加密（原）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/YZgA1YpWFDzkMKBAII-hDg">SpringBoot应用+Docker+Jenkins实现自动化部署（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/zyhlwzy/article/details/90721481">Spring Boot整合Redis实现简单的分布式锁（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://ningyu1.github.io/site/post/62-ant-path-matcher/">RESTful访问权限管理实现思路，AntPathMatcher（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.95id.com/the-permission-design-baseon-rbac-restful.html">基于RBAC的Rest抽象资源权限控制设计及实现（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/liukemng/p/3751338.html">实现注解式权限验证（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/O_j1AYsYb1S9iYGndl0Aqw">Spring Boot 项目瘦身指南（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/isea533/article/details/80922305?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522159382373719724835807092%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=159382373719724835807092&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_v1-1-80922305.pc_v2_rank_blog_v1&utm_term=%E6%89%B9%E9%87%8F">MyBatis批量提交（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/Jo3PZoa7nL99c8UCxPiTTA">贼好用的JWT库（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/RsLGbUwPcF96ea-p8FU8xA">Spring Boot 2.3 优雅关闭新姿势（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/Gzt3-Boi86xFJpmOodo62g">5 个能挣钱的 SpringBoot 项目（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/dA_7mQe98doCk-XkZMlJ5g">Spring Boot 整合 Quartz（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/zJSPzcsFl72JNoqZpkH94A">SpringBoot 整合 Quartz 实现分布式调度（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/6skQR5Nq-LZm0AeWc5-xqg">干掉mapper.xml！MyBatis新特性动态SQL真香！（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/msD98uP8_B_Mb7L-nKbg6w">Mall电商实战项目专属学习路线（转）</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.heartthinkdo.com/?p=2945">Logback实现不同任务输出到不同日志文件（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/Am8NZShe6BCFaMt2yDz6uw">一个轻量级流程编排框架（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/JMcBd6OULcVd9aRKyEGc0w">优化Spring Boot应用Docker镜像，提高CI&#x2F;CD效率</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/F392WVfVlqBNlUQVtQUn8A">号称下一代可视化监控系统，结合SpringBoot使用，贼爽！（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://my.oschina.net/xiaolyuh/blog/1619792">Spring Boot 日志配置(LogBack,LockBack异步日志)（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/MacWx/article/details/111319558">SpringBoot集成Web Socket，实现后台向前端推送信息（转）</a></li>
+<li><h1 id="Spring-Boot版本升级"><a href="#Spring-Boot版本升级" class="headerlink" title="Spring Boot版本升级"></a>Spring Boot版本升级</h1></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/9Psdk_cJHBWH4cuIm66BIw">SpringBoot 2.3.0 新特性一览（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/XdpwuLSpoVchGKd8AhTpXw">Spring Boot 2.3.3 稳定版发布（转）</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/c2XRzUiblQQY6d_GGcIieg">Spring Boot 2.4.0 发布，配置文件重大调整，不要乱升级！！（转）</a></li>
+</ul>
+<h1 id="Spring-Cloud"><a href="#Spring-Cloud" class="headerlink" title="Spring Cloud"></a>Spring Cloud</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/OgjAyezwwXIxngyI24R2bg">3W字带你玩转SpringCloud！（转）</a></li>
+</ul>
+<h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a>Mybatis</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/cJWA0pWWkFN5SQBWOGCLwQ">MyBatis 的执行流程，写得太好了！(转)</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/mP49OCkwqSnamtop0cChdQ">如何避免SQL注入漏洞（转）</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring-Boot/" rel="tag"># Spring Boot</a>
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/05/19/%E5%88%86%E5%B8%83%E5%BC%8F%E5%A5%BD%E6%96%87/" rel="prev" title="分布式好文">
+                  <i class="fa fa-chevron-left"></i> 分布式好文
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/06/01/%E9%85%8D%E5%A5%BD%E7%9A%84Gmail%E5%8F%91%E9%80%81%E9%82%AE%E4%BB%B6%E6%8E%88%E6%9D%83%E5%A4%B1%E8%B4%A5%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8A%9E/" rel="next" title="配好的Gmail发送邮件认证失败，怎么办">
+                  配好的Gmail发送邮件认证失败，怎么办 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

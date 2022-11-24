@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="前言最近项目在不断地更新迭代，项目部署也由笔者来做了。由于笔者不是专业的Linux服务器运维人员，所以好多用到的命令都是现查现用。这里汇总一下笔者目前自己用的命令，方便今后查阅。 当然随着部署工作的不断进行，笔者也会陆续更新学习到的内容。 常用命令删除目录或文件1rm -rf &lt;目录或文件&gt;  选项f表示强制删除，注意使用。 解压缩zip压缩包1unzip &lt;zip文件位置&amp;gt">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CentOS部署应用常用命令汇总">
+<meta property="og:url" content="https://tccoca.github.io/2016/06/08/CentOS%E9%83%A8%E7%BD%B2%E5%BA%94%E7%94%A8%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%B1%87%E6%80%BB/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="前言最近项目在不断地更新迭代，项目部署也由笔者来做了。由于笔者不是专业的Linux服务器运维人员，所以好多用到的命令都是现查现用。这里汇总一下笔者目前自己用的命令，方便今后查阅。 当然随着部署工作的不断进行，笔者也会陆续更新学习到的内容。 常用命令删除目录或文件1rm -rf &lt;目录或文件&gt;  选项f表示强制删除，注意使用。 解压缩zip压缩包1unzip &lt;zip文件位置&amp;gt">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-06-08T09:05:40.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="CentOS">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2016/06/08/CentOS%E9%83%A8%E7%BD%B2%E5%BA%94%E7%94%A8%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%B1%87%E6%80%BB/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2016/06/08/CentOS%E9%83%A8%E7%BD%B2%E5%BA%94%E7%94%A8%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%B1%87%E6%80%BB/","path":"2016/06/08/CentOS部署应用常用命令汇总/","title":"CentOS部署应用常用命令汇总"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>CentOS部署应用常用命令汇总 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">2.</span> <span class="nav-text">常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E7%9B%AE%E5%BD%95%E6%88%96%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">删除目录或文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%8E%8B%E7%BC%A9zip%E5%8E%8B%E7%BC%A9%E5%8C%85"><span class="nav-number">2.2.</span> <span class="nav-text">解压缩zip压缩包</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E5%91%BD%E5%90%8D%E7%9B%AE%E5%BD%95%E6%88%96%E6%96%87%E4%BB%B6%E5%90%8D"><span class="nav-number">2.3.</span> <span class="nav-text">重命名目录或文件名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%8C%87%E5%AE%9A%E5%90%8D%E7%A7%B0%E7%9A%84%E7%A8%8B%E5%BA%8F%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.4.</span> <span class="nav-text">查看指定名称的程序进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%8C%87%E5%AE%9A%E7%AB%AF%E5%8F%A3%E5%8F%B7%E7%9A%84%E5%8D%A0%E7%94%A8%E6%83%85%E5%86%B5"><span class="nav-number">2.5.</span> <span class="nav-text">查看指定端口号的占用情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E8%BF%90%E8%A1%8Cjar%E5%8C%85%E7%9A%84%E6%89%A7%E8%A1%8C"><span class="nav-number">2.6.</span> <span class="nav-text">可运行jar包的执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%A8%8B%E5%BA%8F%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8%E7%9A%84%E6%8E%92%E8%A1%8C%E4%BF%A1%E6%81%AF"><span class="nav-number">2.7.</span> <span class="nav-text">查看程序内存占用的排行信息</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2016/06/08/CentOS%E9%83%A8%E7%BD%B2%E5%BA%94%E7%94%A8%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%B1%87%E6%80%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="CentOS部署应用常用命令汇总 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CentOS部署应用常用命令汇总
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2016-06-08 17:05:40" itemprop="dateCreated datePublished" datetime="2016-06-08T17:05:40+08:00">2016-06-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%B3%BB%E7%BB%9F%E8%BF%90%E7%BB%B4/" itemprop="url" rel="index"><span itemprop="name">系统运维</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近项目在不断地更新迭代，项目部署也由笔者来做了。由于笔者不是专业的Linux服务器运维人员，所以好多用到的命令都是现查现用。这里汇总一下笔者目前自己用的命令，方便今后查阅。</p>
+<p>当然随着部署工作的不断进行，笔者也会陆续更新学习到的内容。</p>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><h4 id="删除目录或文件"><a href="#删除目录或文件" class="headerlink" title="删除目录或文件"></a>删除目录或文件</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf &lt;目录或文件&gt;</span><br></pre></td></tr></table></figure>
+
+<p>选项f表示强制删除，注意使用。</p>
+<h4 id="解压缩zip压缩包"><a href="#解压缩zip压缩包" class="headerlink" title="解压缩zip压缩包"></a>解压缩zip压缩包</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unzip &lt;zip文件位置&gt;</span><br></pre></td></tr></table></figure>
+
+<p>默认解压到zip所在位置。笔者上传部署项目至服务器上时，习惯打包为zip。</p>
+<h4 id="重命名目录或文件名"><a href="#重命名目录或文件名" class="headerlink" title="重命名目录或文件名"></a>重命名目录或文件名</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd &lt;目录或文件位置&gt;</span><br><span class="line">mv &lt;目录或文件&gt; ./&lt;新名称&gt;</span><br></pre></td></tr></table></figure>
+
+<p>重命名使用的是mv命令，mv代表移动目录或文件。</p>
+<h4 id="查看指定名称的程序进程"><a href="#查看指定名称的程序进程" class="headerlink" title="查看指定名称的程序进程"></a>查看指定名称的程序进程</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | grep &lt;模糊名称&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看指定端口号的占用情况"><a href="#查看指定端口号的占用情况" class="headerlink" title="查看指定端口号的占用情况"></a>查看指定端口号的占用情况</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tlnp | grep &lt;端口号&gt;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h4 id="可运行jar包的执行"><a href="#可运行jar包的执行" class="headerlink" title="可运行jar包的执行"></a>可运行jar包的执行</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nohup java -jar &lt;jar包位置&gt; &gt;/dev/null &amp;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>&#x2F;dev&#x2F;null表示运行jar时控制台输出重定向到null中，就是控制台不显示信息。</p>
+</blockquote>
+<p>&amp;表示程序作为后台进程运行，这样即使关闭控制终端，程序依然在运行不会终止。</p>
+<p>运行jar时可能需要配置内存，运行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nohup java -Xmx1024m -Xms1024m -jar &lt;jar包位置&gt; &gt;/dev/null &amp;</span><br></pre></td></tr></table></figure>
+<h4 id="查看程序内存占用的排行信息"><a href="#查看程序内存占用的排行信息" class="headerlink" title="查看程序内存占用的排行信息"></a>查看程序内存占用的排行信息</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -eo rss,pmem,pcpu,vsize,args |  sort -k 1 -r -n | less</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>rss: resident set size,表示进程占用RAM(内存)的大小，单位是KB</li>
+<li>pmem: %M, 占用内存的百分比</li>
+<li>pcpu: %C，占用cpu的百分比</li>
+<li>vsize: 表示进程占用的虚拟内存的大小，KB</li>
+<li>args: 进程名（command）</li>
+</ul>
+<p>sort命令对ps结果进行排序</p>
+<p>-k 1: 按第一个参数 rss进行排序</p>
+<p>-r: 逆序</p>
+<p>-n: numeric，按数字来排序</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/CentOS/" rel="tag"># CentOS</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/05/23/CentOS%E4%B8%8B%E5%AE%89%E8%A3%85Nginx/" rel="prev" title="CentOS下安装Nginx">
+                  <i class="fa fa-chevron-left"></i> CentOS下安装Nginx
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2016/06/30/Ubuntu%E4%B8%8B%E5%BF%AB%E9%80%9F%E5%AE%89%E8%A3%85Nginx/" rel="next" title="Ubuntu下快速安装Nginx">
+                  Ubuntu下快速安装Nginx <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

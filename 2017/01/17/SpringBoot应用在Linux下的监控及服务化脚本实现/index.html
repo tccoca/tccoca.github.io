@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="前言近期由于服务器内存配置过低，其中仍有不断更新上线的应用功能，新服务器未落定的情况下，本着“艰苦朴素”的优良传统，暂时关闭了一些使用率不高的服务。 但是由于内存吃紧，为了保障高使用率的服务正常运行，需要想办法监控服务运行状态，一旦发现服务停止，需要自动重启。 笔者首先想到了Shell脚本，真的是好久没写过脚本了~~~ 基本解决思路：通过常用的ps命令，查看对应的服务是否运行，如果未运行，执行运行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringBoot应用在CentOS下的监控及服务化脚本实现">
+<meta property="og:url" content="https://tccoca.github.io/2017/01/17/SpringBoot%E5%BA%94%E7%94%A8%E5%9C%A8Linux%E4%B8%8B%E7%9A%84%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8C%96%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="前言近期由于服务器内存配置过低，其中仍有不断更新上线的应用功能，新服务器未落定的情况下，本着“艰苦朴素”的优良传统，暂时关闭了一些使用率不高的服务。 但是由于内存吃紧，为了保障高使用率的服务正常运行，需要想办法监控服务运行状态，一旦发现服务停止，需要自动重启。 笔者首先想到了Shell脚本，真的是好久没写过脚本了~~~ 基本解决思路：通过常用的ps命令，查看对应的服务是否运行，如果未运行，执行运行">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-01-17T01:29:40.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="CentOS">
+<meta property="article:tag" content="Spring Boot">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2017/01/17/SpringBoot%E5%BA%94%E7%94%A8%E5%9C%A8Linux%E4%B8%8B%E7%9A%84%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8C%96%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2017/01/17/SpringBoot%E5%BA%94%E7%94%A8%E5%9C%A8Linux%E4%B8%8B%E7%9A%84%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8C%96%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/","path":"2017/01/17/SpringBoot应用在Linux下的监控及服务化脚本实现/","title":"SpringBoot应用在CentOS下的监控及服务化脚本实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>SpringBoot应用在CentOS下的监控及服务化脚本实现 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E2%80%9C%E8%87%AA%E6%88%91%E5%AE%9E%E7%8E%B0%E2%80%9D%E7%9A%84%E8%84%9A%E6%9C%AC"><span class="nav-number">2.</span> <span class="nav-text">“自我实现”的脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SpringBoot%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7"><span class="nav-number">2.1.</span> <span class="nav-text">SpringBoot应用监控</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SpringBoot%E5%BA%94%E7%94%A8%E6%9C%8D%E5%8A%A1%E5%8C%96%E8%84%9A%E6%9C%AC%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">SpringBoot应用服务化脚本配置</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%84%9A%E6%9C%AC%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">服务脚本开机启动配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">环境变量问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2017/01/17/SpringBoot%E5%BA%94%E7%94%A8%E5%9C%A8Linux%E4%B8%8B%E7%9A%84%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%8C%96%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="SpringBoot应用在CentOS下的监控及服务化脚本实现 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SpringBoot应用在CentOS下的监控及服务化脚本实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-01-17 09:29:40" itemprop="dateCreated datePublished" datetime="2017-01-17T09:29:40+08:00">2017-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%B3%BB%E7%BB%9F%E8%BF%90%E7%BB%B4/" itemprop="url" rel="index"><span itemprop="name">系统运维</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>近期由于服务器内存配置过低，其中仍有不断更新上线的应用功能，新服务器未落定的情况下，本着“艰苦朴素”的优良传统，暂时关闭了一些使用率不高的服务。</p>
+<p>但是由于内存吃紧，为了保障高使用率的服务正常运行，需要想办法监控服务运行状态，一旦发现服务停止，需要自动重启。</p>
+<p>笔者首先想到了Shell脚本，真的是好久没写过脚本了~~~</p>
+<p>基本解决思路：通过常用的ps命令，查看对应的服务是否运行，如果未运行，执行运行的命令，记录日志。将所有的命令写入一个脚本，然后交由CentOS的定时任务，每隔一段时间执行一次检测。</p>
+<p>那么就需要去搜索相关的命令以达到预期目的了。不过笔者在网上搜索相关的脚本命令过程中，有了一些意外领悟，那就是如何将SpringBoot应用的jar包在Linux下服务化。</p>
+<h3 id="“自我实现”的脚本"><a href="#“自我实现”的脚本" class="headerlink" title="“自我实现”的脚本"></a>“自我实现”的脚本</h3><p>首先感谢<a target="_blank" rel="noopener" href="http://blog.csdn.net/catoop/article/details/50588851">这篇博文</a>的作者，笔者看过后从中受益匪浅，稍作调整，实现了自己业务需要的脚本内容。</p>
+<p>这里笔者只强调脚本实现过程中的关键点，具体实现的结果，可点击<a target="_blank" rel="noopener" href="http://git.oschina.net/devchenx/ShellScriptAboutJar">这里</a>查看。</p>
+<h4 id="SpringBoot应用监控"><a href="#SpringBoot应用监控" class="headerlink" title="SpringBoot应用监控"></a>SpringBoot应用监控</h4><ul>
+<li>获取应用进程id的命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -ef|grep $APP_NAME|grep -v grep|grep -v kill|awk &#x27;&#123;print $2&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>ps命令，查看进程信息的命令，需要从ps执行结果中筛选出目标应用的那行信息，且截取出进程id。</p>
+<p>grep $APP_NAME：筛选出包含目标应用名称的信息行。变量$APP_NAME表示要检测的目标应用名称，尽量精确，不然会影响筛选结果。</p>
+<p>grep -v grep|grep -v kill：“剔除”grep命令和kill命令的信息行，避免造成干扰。亲身执行过ps…grep…命令的人会清楚，进程信息中除了目标进程，还会显示grep命令的进程。</p>
+<p>awk ‘{print $2}’：截取出进程id的信息。</p>
+<span id="more"></span>
+
+<ul>
+<li>判断进程id是否存在</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">tpid=`ps -ef|grep $app_name|grep -v grep|grep -v kill|awk &#x27;&#123;print $2&#125;&#x27;`</span><br><span class="line">if [ ! $&#123;tpid&#125; ]</span><br><span class="line">then</span><br><span class="line">  curdatetime=$(date &#x27;+%Y-%m-%d %T&#x27;)</span><br><span class="line">  echo &#x27;====== Service Check Time: &#x27;$&#123;curdatetime&#125; &gt;&gt; $CK_LOG</span><br><span class="line">  echo $&#123;app_name&#125;&#x27; is not running.&#x27; &gt;&gt; $CK_LOG</span><br><span class="line">  echo &#x27;try to restart &#x27;$&#123;app_name&#125;&#x27; ...&#x27; &gt;&gt; $CK_LOG</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">启动指定的应用</span></span><br><span class="line">  nohup java $opt_xmx $opt_xms -jar $app_location &gt; /dev/null 2&gt;&amp;1 &amp;</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>将shell脚本设置为定时任务</li>
+</ul>
+<p>看过完整的执行脚本内容，只要有编辑语言基础，你会很快熟悉shell语法中的控制语句使用方法。OK，整合上述关键的命令内容，写入.sh文件中，保存生成shell脚本文件。记住给脚本文件设置执行权限。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">chmod 500 ./test.sh</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">执行脚本试试看</span></span><br><span class="line">./test.sh</span><br></pre></td></tr></table></figure>
+
+<p>手动执行脚本无误后，设置由操作系统定时周期性地执行脚本。执行下面的命令打开定时任务文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crontab -e</span><br></pre></td></tr></table></figure>
+
+<p>打开定时任务文件后，写入内容保存，表示每隔30分钟，执行&#x2F;www目录下的test.sh脚本。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*/30 * * * * * /www/test.sh</span><br></pre></td></tr></table></figure>
+
+<p>注意确保操作系统中的crond服务是打开的，不然即使你填写了定时任务文件，依然无效，笔者吃过亏~：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service crond status</span><br></pre></td></tr></table></figure>
+
+<h4 id="SpringBoot应用服务化脚本配置"><a href="#SpringBoot应用服务化脚本配置" class="headerlink" title="SpringBoot应用服务化脚本配置"></a>SpringBoot应用服务化脚本配置</h4><p>经历了上述检测脚本的实现过程，笔者学习到了如何判断目标应用运行中的一种方法。举一反三一下，配合一些脚本执行时输入的参数，可以实现应用服务化脚本。</p>
+<p>服务化脚本，就是将自己写出的执行脚本，配置成当前操作系统的服务。请类比Windows中的服务。</p>
+<p>举个例子，在CentOS中安装Nginx后，你可以通过下面的命令对Nginx进行操作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看Nginx运行状态</span></span><br><span class="line">service nginx status</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重载配置文件内容</span></span><br><span class="line">service nginx reload</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动nginx</span></span><br><span class="line">service nginx start</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止nginx</span></span><br><span class="line">service nginx stop</span><br></pre></td></tr></table></figure>
+
+<p>如果将自己的应用，起个服务名称，替换上面命令中的nginx，那么日常维护运行应用时，会简化许多手动工作量。</p>
+<p>其实上面命令中的status|reload|start|stop均是脚本执行时接收的参数，在脚本里根据接收到的参数，执行不同的命令。</p>
+<p>具体实现的脚本内容可查看<a target="_blank" rel="noopener" href="http://git.oschina.net/devchenx/ShellScriptAboutJar/blob/master/myservice.sh?dir=0&filepath=myservice.sh&oid=a017247d96abcdbd6844b5b13189cd3ea0092495&sha=c58cef921df38b7e61b7c5c9740fdb16893b2843">这里</a>。假设执行脚本已实现，就叫service.sh吧。</p>
+<p>创建软连接到&#x2F;etc&#x2F;init.d&#x2F;目录下，给服务起个容易记住的名字：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ln -s /www/service.sh /etc/init.d/myservice</span><br></pre></td></tr></table></figure>
+
+<p>结合脚本中的参数意义，即可执行类似如下的命令来验证结果了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">service myservice &lt;参数&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或者</span></span><br><span class="line">/etc/init.d/myservice &lt;参数&gt;</span><br></pre></td></tr></table></figure>
+
+<p>不难看出，命令service可以理解为“&#x2F;etc&#x2F;init.d&#x2F;”的替代。</p>
+<h3 id="服务脚本开机启动配置"><a href="#服务脚本开机启动配置" class="headerlink" title="服务脚本开机启动配置"></a>服务脚本开机启动配置</h3><p>完成执行脚本服务化的配置后，笔者又想将其配置为开机自动启动，这样可以避免意外宕机重启后还需手动启动服务的过程。</p>
+<p>CentOS下依靠chkconfig命令，Ubuntu下依靠update-rc.d命令。笔者这里着重讲解chkconfig命令。</p>
+<p>首先，确保执行的服务化脚本开头一定要添加如下chkconfig需要的选项说明，告知chkconfig该服务的运行级别和开机顺序，具体可搜索chkconfig命令的说明，一看便知。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/sh</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">chkconfig: 2345 99 10</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">description: myservice</span></span><br></pre></td></tr></table></figure>
+
+<p>然后将配置的服务加入开机启动的行列吧。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig myservice on</span><br></pre></td></tr></table></figure>
+
+<p>其实chkconfig … on命令是更改服务所在操作系统中运行级别时用的，真正意义上添加开机启动服务的命令如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig --add myservice</span><br></pre></td></tr></table></figure>
+
+<p>但经过笔者亲试，如果是第一次添加开机启动服务，chkconfig … on也会将服务注册为卡机启动。</p>
+<p>查看开机启动的服务列表：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig --list</span><br></pre></td></tr></table></figure>
+
+<p>删除开机启动的服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig --del myservice</span><br></pre></td></tr></table></figure>
+
+<h3 id="环境变量问题"><a href="#环境变量问题" class="headerlink" title="环境变量问题"></a>环境变量问题</h3><p>在上述的执行脚本构建过程中，笔者发现一个问题，即手动执行脚本没问题，可是将脚本设置为定时任务执行时或配置为服务脚本时，会发现java命令找不到，导致应用无法启动~~</p>
+<p>查询了相关资料，说定时任务执行脚本时是无法识别操作系统中的环境变量的，自然无法识别java命令。所以需要在脚本的开始处添加如下命令，引入操作系统中的环境变量。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+
+<p>但笔者不明白为何服务化脚本中也识别不了环境变量。笔者做了测试，在自建的虚拟机环境下，即使没有引用操作系统的环境变量，service命令依然可以正常运行，但是在线上服务器下，则需要引入环境变量，service命令才能运行。这点还请了解的朋友帮助解答哈~</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>虽然本文标题中写着SpringBoot应用，看完你会发现，执行脚本适用于任何可执行的jar应用程序，只不过SpringBoot应用最终的产出物也是可执行的jar罢了。</p>
+<p>整个过程中，笔者算是又温习了一遍shell语法，不难发现基础语法可以很快上手，并没有想象中的那么难。还有就是熟练掌握Linux命令，可以帮助我们在部署项目时事半功倍。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/CentOS/" rel="tag"># CentOS</a>
+              <a href="/tags/Spring-Boot/" rel="tag"># Spring Boot</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/08/27/%E5%90%AF%E5%8A%A8Nginx%E5%90%8E%E8%AF%B7%E6%B1%82%E8%B5%84%E6%BA%90403%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E6%80%BB%E7%BB%93/" rel="prev" title="启动Nginx后请求资源403解决方案总结">
+                  <i class="fa fa-chevron-left"></i> 启动Nginx后请求资源403解决方案总结
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2017/01/18/Spring%20Boot%E5%BA%94%E7%94%A8%E7%9A%84%E9%83%A8%E7%BD%B2%E7%89%B9%E6%80%A7/" rel="next" title="Spring Boot应用的部署特性">
+                  Spring Boot应用的部署特性 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

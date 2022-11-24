@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="前言前面发了一篇关于深入理解js的继承机制的文章，入口如下： 【转】彻底理解js中关于prototype的继承机制 在js的继承机制中，prototype对象有着至关重要的作用。笔者在此从原型链的角度，聊聊__proto__和prototype。 __proto__与prototype的区别原型链是一个耳熟能详的词儿，它代表着js对象的“族谱”。一个对象的原型链展示了一条完整的继承路径。 在原型链">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解原型链中的__proto__与prototype">
+<meta property="og:url" content="https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="前言前面发了一篇关于深入理解js的继承机制的文章，入口如下： 【转】彻底理解js中关于prototype的继承机制 在js的继承机制中，prototype对象有着至关重要的作用。笔者在此从原型链的角度，聊聊__proto__和prototype。 __proto__与prototype的区别原型链是一个耳熟能详的词儿，它代表着js对象的“族谱”。一个对象的原型链展示了一条完整的继承路径。 在原型链">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/img1.jpg">
+<meta property="article:published_time" content="2018-12-28T00:55:56.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="js">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/img1.jpg">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/","path":"2018/12/28/理解原型链中的-proto-与prototype/","title":"理解原型链中的__proto__与prototype"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>理解原型链中的__proto__与prototype | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#proto-%E4%B8%8Eprototype%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.</span> <span class="nav-text">__proto__与prototype的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E5%9E%8B%E9%93%BE%E5%9B%BE%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text">原型链图解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#instanceof%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">3.1.</span> <span class="nav-text">instanceof运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%B8%A1%E5%92%8C%E8%9B%8B%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.2.</span> <span class="nav-text">鸡和蛋的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Object-create%E6%96%B9%E6%B3%95"><span class="nav-number">3.3.</span> <span class="nav-text">Object.create方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="理解原型链中的__proto__与prototype | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          理解原型链中的__proto__与prototype
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-12-28 08:55:56" itemprop="dateCreated datePublished" datetime="2018-12-28T08:55:56+08:00">2018-12-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%8E%9F%E5%88%9B/" itemprop="url" rel="index"><span itemprop="name">原创</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前面发了一篇关于深入理解js的继承机制的文章，入口如下：</p>
+<p><a target="_blank" rel="noopener" href="https://blog.chace0120.cn/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/">【转】彻底理解js中关于prototype的继承机制</a></p>
+<p>在js的继承机制中，prototype对象有着至关重要的作用。笔者在此从原型链的角度，聊聊__proto__和prototype。</p>
+<h2 id="proto-与prototype的区别"><a href="#proto-与prototype的区别" class="headerlink" title="__proto__与prototype的区别"></a>__proto__与prototype的区别</h2><p>原型链是一个耳熟能详的词儿，它代表着js对象的“族谱”。一个对象的原型链展示了一条完整的继承路径。</p>
+<p>在原型链中，__proto__与prototype起着承上启下的作用。虽然两者长得很像，但还是有本质区别的。</p>
+<ul>
+<li>js中每个对象都具有内置属性__proto__，该属性的值就是该对象构造函数的prototype对象。对象字面量的__proto__的值就是Object.prototype。</li>
+<li>js中并不是所有的对象都有内置属性prototype。因为js中函数可以充当构造函数，所有只有函数才有prototype属性。当然函数也是对象，所以函数也有内置的__proto__属性。只不过只有拿函数当作构造函数来使用时，才需要我们去关注__proto__和prototype属性。</li>
+<li>构造函数构造出实例对象后，实例对象默认是继承prototype对象中的属性和方法的。具体内部是怎样实现继承的呢？实例通过设置自己的__proto__指向承构造函数的prototype来实现这种继承。</li>
+<li>一般情况下是不推荐直接操作对象的内置属性__proto__的。而prototype却没有这种限制，可以进行修改调整，实现继承的扩展。</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="原型链图解"><a href="#原型链图解" class="headerlink" title="原型链图解"></a>原型链图解</h2><p>所谓一图胜千言，先来看下原型链的一张图解，概括的很详尽。</p>
+<img src="/2018/12/28/%E7%90%86%E8%A7%A3%E5%8E%9F%E5%9E%8B%E9%93%BE%E4%B8%AD%E7%9A%84-proto-%E4%B8%8Eprototype/img1.jpg" class="">
+
+<p>从图中可以看出，在原型链中，对象的__proto__属性可以理解为“穿针引线”，而链中的每个节点则是构造函数的prototype对象，prototype对象中定义了需要被继承的属性和方法。</p>
+<h3 id="instanceof运算符"><a href="#instanceof运算符" class="headerlink" title="instanceof运算符"></a>instanceof运算符</h3><p>instanceof运算符返回一个布尔值，表示对象是否为某个构造函数的实例。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">f1 <span class="keyword">instanceof</span> <span class="title class_">Foo</span>; <span class="comment">// true</span></span><br><span class="line">f1 <span class="keyword">instanceof</span> <span class="title class_">Object</span>; <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>看上面原型链图中的实例对象f1，结合上面代码的运行结果，可以看出instanceof运算符，实际是沿着指定实例对象的原型链在查找指定构造函数的prototype对象，如果存在该prototype对象则返回true，否则返回false。</p>
+<h3 id="鸡和蛋的问题"><a href="#鸡和蛋的问题" class="headerlink" title="鸡和蛋的问题"></a>鸡和蛋的问题</h3><p>众所周知，js是单继承的。从原型链图中可以看出，任何一个对象的原型链顶端一定是Object.prototype，而Object.prototype之上就是null啦。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Function</span> <span class="keyword">instanceof</span> <span class="title class_">Object</span>; <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>js中，万物皆对象。Function作为构造函数时，Function.prototype通过__proto__指向了顶端的Object.prototype，所以上面的运行结果表明Function继承于Object。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Object</span> <span class="keyword">instanceof</span> <span class="title class_">Function</span>; <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>看到这里很多人会迷惑了，到底是Object继承了Function，还是Function继承了Object呢？这个就好比先有的鸡还是先有的蛋呢？</p>
+<p>笔者认为，通过上图中的原型链说明，毋庸置疑的是Object.prototype位于链的顶端。只不过函数在js中太特别了，Object可以作为构造函数存在，而所有函数（包括构造函数）均是通过Function构造函数产生的实例对象，所以Object构造函数的__proto__指向的是Function.prototype，也就产生了上面的运行结果。</p>
+<p>从原型链图中也可以发现，Function作为构造函数，Function.__proto__指向的是Function.prototype，而Function的prototype对象也是Function.prototype，这点是非常特殊的存在。</p>
+<h3 id="Object-create方法"><a href="#Object-create方法" class="headerlink" title="Object.create方法"></a>Object.create方法</h3><p>Object.create方法允许不通过构造函数产生一个实例对象，产生的实例对象继承于指定的另一个实例对象，看下面的代码原理。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="title class_">Object</span>.<span class="property">create</span> !== <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">  <span class="title class_">Object</span>.<span class="property">create</span> = <span class="keyword">function</span> (<span class="params">obj</span>) &#123;</span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">F</span>(<span class="params"></span>) &#123;&#125;</span><br><span class="line">    F.<span class="property"><span class="keyword">prototype</span></span> = obj;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，Object.create方法产生的实例对象，其__proto__指向指定的obj，obj中的属性和方法可以供产生的实例对象继承。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a target="_blank" rel="noopener" href="https://github.com/creeperyang/blog/issues/9">从__proto__和prototype来深入理解JS对象和原型链</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/js/" rel="tag"># js</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/12/25/%E3%80%90%E8%BD%AC%E3%80%91%E5%BD%BB%E5%BA%95%E7%90%86%E8%A7%A3js%E4%B8%AD%E5%85%B3%E4%BA%8Eprototype%E7%9A%84%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/" rel="prev" title="【转】彻底理解js中关于prototype的继承机制">
+                  <i class="fa fa-chevron-left"></i> 【转】彻底理解js中关于prototype的继承机制
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/" rel="next" title="【转】还在用Synchronized？Atomic你了解不？">
+                  【转】还在用Synchronized？Atomic你了解不？ <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"tccoca.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="原文作者：Java识堂（微信公众号）  前言redis是键值对的数据库，常用的五种数据类型。  字符串类型（string） 散列类型（hash） 列表类型（list） 集合类型（set） 有序集合类型（zset）  Redis用作缓存，主要两个用途：高性能，高并发，因为内存天然支持高并发。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】Redis的n种妙用，不仅仅是缓存">
+<meta property="og:url" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/index.html">
+<meta property="og:site_name" content="tccoca&#39;s blogs">
+<meta property="og:description" content="原文作者：Java识堂（微信公众号）  前言redis是键值对的数据库，常用的五种数据类型。  字符串类型（string） 散列类型（hash） 列表类型（list） 集合类型（set） 有序集合类型（zset）  Redis用作缓存，主要两个用途：高性能，高并发，因为内存天然支持高并发。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img1.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img2.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img3.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img4.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img5.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img6.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img7.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img8.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img9.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img10.jpg">
+<meta property="og:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img11.jpg">
+<meta property="article:published_time" content="2019-01-17T05:49:21.000Z">
+<meta property="article:modified_time" content="2021-10-29T00:21:48.000Z">
+<meta property="article:author" content="唐僧洗头用飘柔">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img1.jpg">
+
+
+<link rel="canonical" href="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/","path":"2019/01/17/【转】Redis的n种妙用，不仅仅是缓存/","title":"【转】Redis的n种妙用，不仅仅是缓存"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>【转】Redis的n种妙用，不仅仅是缓存 | tccoca's blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">tccoca's blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">nice to meet you</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%EF%BC%88string%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">分布式锁（string）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E6%95%B0%E5%99%A8%EF%BC%88string%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">计数器（string）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%A8%E5%B1%80%E5%94%AF%E4%B8%80id%EF%BC%88string%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">分布式全局唯一id（string）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%88list%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">消息队列（list）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B0%E6%B5%AA-x2F-Twitter%E7%94%A8%E6%88%B7%E6%B6%88%E6%81%AF%E5%88%97%E8%A1%A8%EF%BC%88list%EF%BC%89"><span class="nav-number">2.5.</span> <span class="nav-text">新浪&#x2F;Twitter用户消息列表（list）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%BD%E5%A5%96%E6%B4%BB%E5%8A%A8%EF%BC%88set%EF%BC%89"><span class="nav-number">2.6.</span> <span class="nav-text">抽奖活动（set）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E7%82%B9%E8%B5%9E%EF%BC%8C%E7%AD%BE%E5%88%B0%EF%BC%8Clike%E7%AD%89%E5%8A%9F%E8%83%BD-set"><span class="nav-number">2.7.</span> <span class="nav-text">实现点赞，签到，like等功能(set)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%85%B3%E6%B3%A8%E6%A8%A1%E5%9E%8B%EF%BC%8C%E5%8F%AF%E8%83%BD%E8%AE%A4%E8%AF%86%E7%9A%84%E4%BA%BA%EF%BC%88set%EF%BC%89"><span class="nav-number">2.8.</span> <span class="nav-text">实现关注模型，可能认识的人（set）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%B5%E5%95%86%E5%95%86%E5%93%81%E7%AD%9B%E9%80%89%EF%BC%88set%EF%BC%89"><span class="nav-number">2.9.</span> <span class="nav-text">电商商品筛选（set）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E8%A1%8C%E7%89%88%EF%BC%88zset%EF%BC%89"><span class="nav-number">2.10.</span> <span class="nav-text">排行版（zset）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text">过期策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%9C%9F%E5%88%A0%E9%99%A4"><span class="nav-number">3.1.</span> <span class="nav-text">定期删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A4"><span class="nav-number">3.2.</span> <span class="nav-text">惰性删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%87%87%E7%94%A8%E5%AE%9A%E6%9C%9F%E5%88%A0%E9%99%A4-%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A42%E7%A7%8D%E7%AD%96%E7%95%A5%E5%91%A2%EF%BC%9F"><span class="nav-number">3.3.</span> <span class="nav-text">为什么要采用定期删除+惰性删除2种策略呢？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5"><span class="nav-number">4.</span> <span class="nav-text">内存淘汰策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%81%E4%B9%85%E5%8C%96%E7%AD%96%E7%95%A5"><span class="nav-number">5.</span> <span class="nav-text">持久化策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB%E5%92%8CAOF%E5%88%B0%E5%BA%95%E8%AF%A5%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%EF%BC%9F"><span class="nav-number">5.1.</span> <span class="nav-text">RDB和AOF到底该如何选择？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9%E5%92%8C%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F"><span class="nav-number">6.</span> <span class="nav-text">缓存雪崩和缓存穿透</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">6.1.</span> <span class="nav-text">缓存雪崩是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9"><span class="nav-number">6.2.</span> <span class="nav-text">如何解决缓存雪崩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">6.3.</span> <span class="nav-text">缓存穿透是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F"><span class="nav-number">6.4.</span> <span class="nav-text">如何解决缓存穿透</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">唐僧洗头用飘柔</p>
+  <div class="site-description" itemprop="description">Good good study, day day up!</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tccoca" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;tccoca" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tccoca.github.io/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="唐僧洗头用飘柔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tccoca's blogs">
+      <meta itemprop="description" content="Good good study, day day up!">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="【转】Redis的n种妙用，不仅仅是缓存 | tccoca's blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【转】Redis的n种妙用，不仅仅是缓存
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-01-17 13:49:21" itemprop="dateCreated datePublished" datetime="2019-01-17T13:49:21+08:00">2019-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2021-10-29 08:21:48" itemprop="dateModified" datetime="2021-10-29T08:21:48+08:00">2021-10-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BD%AC%E5%8F%91%E5%A5%BD%E6%96%87/" itemprop="url" rel="index"><span itemprop="name">转发好文</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>原文作者：Java识堂（微信公众号）</p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>redis是键值对的数据库，常用的五种数据类型。</p>
+<ul>
+<li>字符串类型（string）</li>
+<li>散列类型（hash）</li>
+<li>列表类型（list）</li>
+<li>集合类型（set）</li>
+<li>有序集合类型（zset）</li>
+</ul>
+<p>Redis用作缓存，主要两个用途：高性能，高并发，因为内存天然支持高并发。</p>
+<span id="more"></span>
+
+<h2 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h2><h3 id="分布式锁（string）"><a href="#分布式锁（string）" class="headerlink" title="分布式锁（string）"></a>分布式锁（string）</h3><p>setnx key value，当key不存在时，将 key 的值设为 value ，返回1。若给定的 key 已经存在，则setnx不做任何动作，返回0。</p>
+<p>当setnx返回1时，表示获取锁，做完操作以后del key，表示释放锁，如果setnx返回0表示获取锁失败，整体思路大概就是这样，细节还是比较多的，有时间单开一篇来讲解。</p>
+<h3 id="计数器（string）"><a href="#计数器（string）" class="headerlink" title="计数器（string）"></a>计数器（string）</h3><p>如知乎每个问题的被浏览器次数。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img1.jpg" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set key 0</span><br><span class="line">incr key // incr readcount::&#123;帖子id&#125; 每阅读一次</span><br><span class="line">get key // get readcount::&#123;帖子id&#125; 获取阅读量</span><br></pre></td></tr></table></figure>
+
+<h3 id="分布式全局唯一id（string）"><a href="#分布式全局唯一id（string）" class="headerlink" title="分布式全局唯一id（string）"></a>分布式全局唯一id（string）</h3><p>分布式全局唯一id的实现方式有很多，这里只介绍用redis实现。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img2.jpg" class="">
+
+<p>每次获取userId的时候，对userId加1再获取，可以改进为如下形式。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img3.jpg" class="">
+
+<p>直接获取一段userId的最大值，缓存到本地慢慢累加，快到了userId的最大值时，再去获取一段，一个用户服务宕机了，也顶多一小段userId没有用到。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set userId 0</span><br><span class="line">incr usrId //返回1</span><br><span class="line">incrby userId 1000 //返回10001</span><br></pre></td></tr></table></figure>
+
+<h3 id="消息队列（list）"><a href="#消息队列（list）" class="headerlink" title="消息队列（list）"></a>消息队列（list）</h3><p>在list里面一边进，一边出即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 实现方式一</span><br><span class="line"># 一直往list左边放</span><br><span class="line">lpush key value </span><br><span class="line"># key这个list有元素时，直接弹出，没有元素被阻塞，直到等待超时或发现可弹出元素为止，上面例子超时时间为10s</span><br><span class="line">brpop key value 10 </span><br><span class="line"></span><br><span class="line"># 实现方式二</span><br><span class="line">rpush key value</span><br><span class="line">blpop key value 10</span><br></pre></td></tr></table></figure>
+
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img4.jpg" class="">
+
+<h3 id="新浪-x2F-Twitter用户消息列表（list）"><a href="#新浪-x2F-Twitter用户消息列表（list）" class="headerlink" title="新浪&#x2F;Twitter用户消息列表（list）"></a>新浪&#x2F;Twitter用户消息列表（list）</h3><img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img5.jpg" class="">
+
+<p>假如说小编li关注了2个微博a和b，a发了一条微博（编号为100）就执行如下命令。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lpush msg::li 100</span><br></pre></td></tr></table></figure>
+
+<p>b发了一条微博（编号为200）就执行如下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lpush msg::li 200</span><br></pre></td></tr></table></figure>
+
+<p>假如想拿最近的10条消息就可以执行如下命令（最新的消息一定在list的最左边）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 下标从0开始，[start,stop]是闭区间，都包含</span><br><span class="line">lrange msg::li 0 9 </span><br></pre></td></tr></table></figure>
+
+<h3 id="抽奖活动（set）"><a href="#抽奖活动（set）" class="headerlink" title="抽奖活动（set）"></a>抽奖活动（set）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 参加抽奖活动</span><br><span class="line">sadd key &#123;userId&#125; </span><br><span class="line"></span><br><span class="line"># 获取所有抽奖用户，大轮盘转起来</span><br><span class="line">smembers key </span><br><span class="line"></span><br><span class="line"># 抽取count名中奖者，并从抽奖活动中移除</span><br><span class="line">spop key count </span><br><span class="line"></span><br><span class="line"># 抽取count名中奖者，不从抽奖活动中移除</span><br><span class="line">srandmember key count</span><br></pre></td></tr></table></figure>
+
+<h3 id="实现点赞，签到，like等功能-set"><a href="#实现点赞，签到，like等功能-set" class="headerlink" title="实现点赞，签到，like等功能(set)"></a>实现点赞，签到，like等功能(set)</h3><img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img6.jpg" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 1001用户给8001帖子点赞</span><br><span class="line">sadd like::8001 1001</span><br><span class="line"></span><br><span class="line"># 取消点赞</span><br><span class="line">srem like::8001 1001</span><br><span class="line"></span><br><span class="line"># 检查用户是否点过赞</span><br><span class="line">sismember like::8001 1001 </span><br><span class="line"></span><br><span class="line"># 获取点赞的用户列表</span><br><span class="line">smembers like::8001 </span><br><span class="line"></span><br><span class="line"># 获取点赞用户数</span><br><span class="line">scard like::8001 </span><br></pre></td></tr></table></figure>
+
+<h3 id="实现关注模型，可能认识的人（set）"><a href="#实现关注模型，可能认识的人（set）" class="headerlink" title="实现关注模型，可能认识的人（set）"></a>实现关注模型，可能认识的人（set）</h3><img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img7.jpg" class="">
+
+<p>seven关注的人</p>
+<p>sevenSub -&gt; {qing, mic, james}</p>
+<p>青山关注的人</p>
+<p>qingSub-&gt;{seven,jack,mic,james}</p>
+<p>Mic关注的人</p>
+<p>MicSub-&gt;{seven,james,qing,jack,tom}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 返回sevenSub和qingSub的交集，即seven和青山的共同关注</span><br><span class="line">sinter sevenSub qingSub -&gt; &#123;mic,james&#125;</span><br><span class="line"></span><br><span class="line"># 我关注的人也关注他,下面例子中我是seven</span><br><span class="line"># qing在micSub中返回1，否则返回0</span><br><span class="line">sismember micSub qing</span><br><span class="line">sismember jamesSub qing</span><br><span class="line"></span><br><span class="line"># 我可能认识的人,下面例子中我是seven</span><br><span class="line"># 求qingSub和sevenSub的差集，并存在sevenMayKnow集合中</span><br><span class="line">sdiffstore sevenMayKnow qingSub sevenSub -&gt; &#123;seven,jack&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="电商商品筛选（set）"><a href="#电商商品筛选（set）" class="headerlink" title="电商商品筛选（set）"></a>电商商品筛选（set）</h3><img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img8.jpg" class="">
+
+<p>每个商品入库的时候即会建立他的静态标签列表如，品牌，尺寸，处理器，内存。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 将拯救者y700P-001和ThinkPad-T480这两个元素放到集合brand::lenovo</span><br><span class="line">sadd brand::lenovo 拯救者y700P-001 ThinkPad-T480</span><br><span class="line">sadd screenSize::15.6 拯救者y700P-001 机械革命Z2AIR</span><br><span class="line">sadd processor::i7 拯救者y700P-001 机械革命X8TIPlus</span><br><span class="line"></span><br><span class="line"># 获取品牌为联想，屏幕尺寸为15.6，并且处理器为i7的电脑品牌(sinter为获取集合的交集)</span><br><span class="line">sinter brand::lenovo screenSize::15.6 processor::i7 -&gt; 拯救者y700P-001</span><br></pre></td></tr></table></figure>
+
+<h3 id="排行版（zset）"><a href="#排行版（zset）" class="headerlink" title="排行版（zset）"></a>排行版（zset）</h3><p>redis的zset天生是用来做排行榜的、好友列表, 去重, 历史记录等业务需求。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img9.jpg" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># user1的用户分数为 10</span><br><span class="line">zadd ranking 10 user1</span><br><span class="line">zadd ranking 20 user2</span><br><span class="line"></span><br><span class="line"># 取分数最高的3个用户</span><br><span class="line">zrevrange ranking 0 2 withscores</span><br></pre></td></tr></table></figure>
+
+<h2 id="过期策略"><a href="#过期策略" class="headerlink" title="过期策略"></a>过期策略</h2><h3 id="定期删除"><a href="#定期删除" class="headerlink" title="定期删除"></a>定期删除</h3><p>redis 会将每个设置了过期时间的 key 放入到一个独立的字典中，以后会定期遍历这个字典来删除到期的 key。</p>
+<p><strong>定期删除策略</strong></p>
+<p>Redis 默认会每秒进行十次过期扫描（100ms一次），过期扫描不会遍历过期字典中所有的 key，而是采用了一种简单的贪心策略。</p>
+<p>从过期字典中随机 20 个 key；</p>
+<p>删除这 20 个 key 中已经过期的 key；</p>
+<p>如果过期的 key 比率超过 1&#x2F;4，那就重复步骤 1。</p>
+<h3 id="惰性删除"><a href="#惰性删除" class="headerlink" title="惰性删除"></a>惰性删除</h3><p>除了定期遍历之外，它还会使用惰性策略来删除过期的 key，所谓惰性策略就是在客户端访问这个 key 的时候，redis 对 key 的过期时间进行检查，如果过期了就立即删除，不会给你返回任何东西。</p>
+<p><strong>定期删除是集中处理，惰性删除是零散处理。</strong></p>
+<h3 id="为什么要采用定期删除-惰性删除2种策略呢？"><a href="#为什么要采用定期删除-惰性删除2种策略呢？" class="headerlink" title="为什么要采用定期删除+惰性删除2种策略呢？"></a>为什么要采用定期删除+惰性删除2种策略呢？</h3><p>如果过期就删除。假设redis里放了10万个key，都设置了过期时间，你每隔几百毫秒，就检查10万个key，那redis基本上就死了，cpu负载会很高的，消耗在你的检查过期key上了</p>
+<p>但是问题是，定期删除可能会导致很多过期key到了时间并没有被删除掉，那咋整呢？所以就是惰性删除了。这就是说，在你获取某个key的时候，redis会检查一下 ，这个key如果设置了过期时间那么是否过期了？如果过期了此时就会删除，不会给你返回任何东西。</p>
+<p>并不是key到时间就被删除掉，而是你查询这个key的时候，redis再懒惰的检查一下。</p>
+<p>通过上述两种手段结合起来，保证过期的key一定会被干掉。</p>
+<p>所以说用了上述2种策略后，下面这种现象就不难解释了：数据明明都过期了，但是还占有着内存。</p>
+<h2 id="内存淘汰策略"><a href="#内存淘汰策略" class="headerlink" title="内存淘汰策略"></a>内存淘汰策略</h2><p>这个问题可能有小伙伴们遇到过，放到Redis中的数据怎么没了？</p>
+<p>因为Redis将数据放到内存中，内存是有限的，比如redis就只能用10个G，你要是往里面写了20个G的数据，会咋办？当然会干掉10个G的数据，然后就保留10个G的数据了。那干掉哪些数据？保留哪些数据？当然是干掉不常用的数据，保留常用的数据了。</p>
+<p>Redis提供的内存淘汰策略有如下几种：</p>
+<ol>
+<li>noeviction 不会继续服务写请求 (DEL 请求可以继续服务)，读请求可以继续进行。这样可以保证不会丢失数据，但是会让线上的业务不能持续进行。这是默认的淘汰策略。</li>
+<li>volatile-lru 尝试淘汰设置了过期时间的 key，最少使用的 key 优先被淘汰。没有设置过期时间的 key 不会被淘汰，这样可以保证需要持久化的数据不会突然丢失。（这个是使用最多的）</li>
+<li>volatile-ttl 跟上面一样，除了淘汰的策略不是 LRU，而是 key 的剩余寿命 ttl 的值，ttl 越小越优先被淘汰。</li>
+<li>volatile-random 跟上面一样，不过淘汰的 key 是过期 key 集合中随机的 key。</li>
+<li>allkeys-lru 区别于 volatile-lru，这个策略要淘汰的 key 对象是全体的 key 集合，而不只是过期的 key 集合。这意味着没有设置过期时间的 key 也会被淘汰。</li>
+<li>allkeys-random 跟上面一样，不过淘汰的策略是随机的 key。allkeys-random 跟上面一样，不过淘汰的策略是随机的 key。</li>
+</ol>
+<h2 id="持久化策略"><a href="#持久化策略" class="headerlink" title="持久化策略"></a>持久化策略</h2><p>Redis的数据是存在内存中的，如果Redis发生宕机，那么数据会全部丢失，因此必须提供持久化机制。</p>
+<p>Redis 的持久化机制有两种，第一种是快照（RDB），第二种是 AOF 日志。快照是一次全量备份，AOF 日志是连续的增量备份。快照是内存数据的二进制序列化形式，在存储上非常紧凑，而 AOF 日志记录的是内存数据修改的指令记录文本。AOF 日志在长期的运行过程中会变的无比庞大，数据库重启时需要加载 AOF 日志进行指令重放，这个时间就会无比漫长。所以需要定期进行 AOF 重写，给 AOF 日志进行瘦身。</p>
+<p>RDB是通过Redis主进程fork子进程，让子进程执行磁盘 IO 操作来进行 RDB 持久化，AOF 日志存储的是 Redis 服务器的顺序指令序列，AOF 日志只记录对内存进行修改的指令记录。即RDB记录的是数据，AOF记录的是指令。</p>
+<h3 id="RDB和AOF到底该如何选择？"><a href="#RDB和AOF到底该如何选择？" class="headerlink" title="RDB和AOF到底该如何选择？"></a>RDB和AOF到底该如何选择？</h3><ol>
+<li>不要仅仅使用 RDB，因为那样会导致你丢失很多数据，因为RDB是隔一段时间来备份数据。</li>
+<li>也不要仅仅使用 AOF，因为那样有两个问题，第一，通过 AOF 做冷备没有RDB恢复速度快; 第二，RDB 每次简单粗暴生成数据快照，更加健壮，可以避免 AOF 这种复杂的备份和恢复机制的 bug。</li>
+<li>用RDB恢复内存状态会丢失很多数据，重放AOP日志又很慢。Redis4.0推出了混合持久化来解决这个问题。将 rdb 文件的内容和增量的 AOF 日志文件存在一起。这里的 AOF 日志不再是全量的日志，而是自持久化开始到持久化结束的这段时间发生的增量 AOF 日志，通常这部分 AOF 日志很小。于是在 Redis 重启的时候，可以先加载 rdb 的内容，然后再重放增量 AOF 日志就可以完全替代之前的 AOF 全量文件重放，重启效率因此大幅得到提升。</li>
+</ol>
+<h2 id="缓存雪崩和缓存穿透"><a href="#缓存雪崩和缓存穿透" class="headerlink" title="缓存雪崩和缓存穿透"></a>缓存雪崩和缓存穿透</h2><h3 id="缓存雪崩是什么？"><a href="#缓存雪崩是什么？" class="headerlink" title="缓存雪崩是什么？"></a>缓存雪崩是什么？</h3><p>假设有如下一个系统，高峰期请求为5000次&#x2F;秒，4000次走了缓存，只有1000次落到了数据库上，数据库每秒1000的并发是一个正常的指标，完全可以正常工作，但如果缓存宕机了，每秒5000次的请求会全部落到数据库上，数据库立马就死掉了，因为数据库一秒最多抗2000个请求，如果DBA重启数据库，立马又会被新的请求打死了，这就是缓存雪崩。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img10.jpg" class="">
+
+<h3 id="如何解决缓存雪崩"><a href="#如何解决缓存雪崩" class="headerlink" title="如何解决缓存雪崩"></a>如何解决缓存雪崩</h3><p>事前：redis高可用，主从+哨兵，redis cluster，避免全盘崩溃<br>事中：本地ehcache缓存 + hystrix限流&amp;降级，避免MySQL被打死<br>事后：redis持久化，快速恢复缓存数据</p>
+<h3 id="缓存穿透是什么？"><a href="#缓存穿透是什么？" class="headerlink" title="缓存穿透是什么？"></a>缓存穿透是什么？</h3><p>假如客户端每秒发送5000个请求，其中4000个为黑客的恶意攻击，即在数据库中也查不到。举个例子，用户id为正数，黑客构造的用户id为负数，<br>如果黑客每秒一直发送这4000个请求，缓存就不起作用，数据库也很快被打死。</p>
+<img src="/2019/01/17/%E3%80%90%E8%BD%AC%E3%80%91Redis%E7%9A%84n%E7%A7%8D%E5%A6%99%E7%94%A8%EF%BC%8C%E4%B8%8D%E4%BB%85%E4%BB%85%E6%98%AF%E7%BC%93%E5%AD%98/img11.jpg" class="">
+
+<h3 id="如何解决缓存穿透"><a href="#如何解决缓存穿透" class="headerlink" title="如何解决缓存穿透"></a>如何解决缓存穿透</h3><p>查询不到的数据也放到缓存，value为空，如set -999 “”</p>
+<p>总而言之，缓存雪崩就是缓存失效，请求全部全部打到数据库，数据库瞬间被打死。缓存穿透就是查询了一个一定不存在的数据，并且从存储层查不到的数据没有写入缓存，这将导致这个不存在的数据每次请求都要到存储层去查询，失去了缓存的意义。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>咕泡学院公开课</p>
+<p>《Redis 深度历险：核心原理与应用实践》</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java">https://github.com/doocs/advanced-java</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/01/12/%E3%80%90%E8%BD%AC%E3%80%91%E8%BF%98%E5%9C%A8%E7%94%A8Synchronized%EF%BC%9FAtomic%E4%BD%A0%E4%BA%86%E8%A7%A3%E4%B8%8D%EF%BC%9F/" rel="prev" title="【转】还在用Synchronized？Atomic你了解不？">
+                  <i class="fa fa-chevron-left"></i> 【转】还在用Synchronized？Atomic你了解不？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/05/19/%E8%A7%84%E9%81%BFMySQL%E4%B8%AD%E7%9A%84%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/" rel="next" title="规避MySQL中的索引失效">
+                  规避MySQL中的索引失效 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">唐僧洗头用飘柔</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
